@@ -15,14 +15,14 @@
 
 .field {
     display: grid;
-    grid-template-columns: 80px 200px; /* Fixed widths: label 70px, input 200px */
+    grid-template-columns: 80px 200px; /* Fixed widths: label 80px, input 200px */
     align-items: center;
     gap: 8px;
-    width: 278px; /* 70px + 200px + 8px gap */
+    width: 288px; /* 80px + 200px + 8px gap */
 }
 
 .field label {
-    min-width: 70px;  /* Fixed width for all labels */
+    min-width: 80px;  /* Fixed width for all labels */
     text-align: right; /* Optional: makes it look cleaner */
 }
 
