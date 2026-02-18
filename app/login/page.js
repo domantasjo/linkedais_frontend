@@ -12,8 +12,14 @@ export default function LoginPage()
             <h1>Login</h1>
             <div className={"field"}>
                 <label htmlFor="email">Email:</label>
-                <input id="email" type="email" placeholder="Email" style={{color: "black", border: "2px solid black", borderRadius: "3px",  padding: "1px"}} required />
+                <input id="email" type="email" placeholder="Email" required />
+            </div>
+            <div className={"field"}>
+                <label htmlFor="password">Password:</label>
+                <input id="password" type="password" placeholder="Password" required />
             </div>
         </div>
+
+
     );
 }
