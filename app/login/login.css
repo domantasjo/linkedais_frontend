@@ -2,16 +2,36 @@
     color: black;
 }
 .login-container {
-    color: black;
+    background-color: #1e1e1e;
+    color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
     gap: 12px;
+
 }
+
 .field {
-    display: flex;
+    display: grid;
+    grid-template-columns: 80px 200px; /* Fixed widths: label 70px, input 200px */
     align-items: center;
     gap: 8px;
+    width: 278px; /* 70px + 200px + 8px gap */
+}
+
+.field label {
+    min-width: 70px;  /* Fixed width for all labels */
+    text-align: right; /* Optional: makes it look cleaner */
+}
+
+.field input {
+    width: 100%;
+    color: black;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 3px;
+    padding: 1px;
+    box-sizing: border-box;
 }
