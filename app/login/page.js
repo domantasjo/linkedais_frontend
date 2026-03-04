@@ -1,27 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+    const router = useRouter();
     const[email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const[isLoggedIn, setIsLoggedIn] = useState("");
-    const handleRegister = async () => {
-        try {
-            const res = await fetch("http://localhost:8080/api/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setIsLoggedIn("Registered successfully!");
-            } else {
-                setIsLoggedIn(data.message || "Registration failed");
-            }
-        } catch (err) {
-            setIsLoggedIn("Server error");
-        }
-    };
 
     const handleLogin = async () => {
         try {
@@ -41,6 +26,11 @@ export default function LoginPage() {
             setIsLoggedIn("Server error");
         }
     };
+
+    const goToRegister = () => {
+        router.push("/register");
+    };
+
     return(
         /* 1. The Background */
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -105,7 +95,7 @@ export default function LoginPage() {
                     </button>
 
                     <button
-                        onClick={handleRegister}
+                        onClick={goToRegister}
                         className="w-full bg-white text-gray-800 border border-gray-300 font-semibold py-2 rounded-md hover:bg-gray-50 transition active:scale-95"
                     >
                         Registruotis
