@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import PrivateRoute from "../components/PrivateRouter";
 
 export default function Page() {
     const [profile, setProfile] = useState(null);
@@ -25,7 +26,8 @@ export default function Page() {
         );
     }
     return (
-        <div className="max-w-3xl mx-auto p-6 space-y-6">
+        <PrivateRoute>
+        <div className="bg-white max-w-3xl mx-auto p-6 space-y-6">
             {/* Profile Header */}
             <div className="bg-white shadow rounded-lg p-6 flex items-center gap-6">
                 <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600">
@@ -57,5 +59,6 @@ export default function Page() {
                 </ul>
             </div>
         </div>
+        </PrivateRoute>
     );
 }

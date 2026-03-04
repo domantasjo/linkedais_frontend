@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import PrivateRoute from "../components/PrivateRouter";
 
 const tempPosts =[
     {
@@ -36,7 +37,7 @@ export default function FeedPage(){
     const [posts, setPosts] = useState(tempPosts);
 
     return(
-        // Background
+        <PrivateRoute>
         <div className="min-h-screen bg-gray-100 p-8">
 
             {/* Feed Container */}
@@ -77,5 +78,6 @@ export default function FeedPage(){
 
             </div>
         </div>
+        </PrivateRoute>
     );
 }
