@@ -21,7 +21,7 @@ export default function Page() {
     if (!profile) {
         return (
             <div className="max-w-3xl mx-auto p-6">
-                <p className="text-gray-500">Loading profile...</p>
+                <p className="text-black">Loading profile...</p>
             </div>
         );
     }
@@ -35,21 +35,21 @@ export default function Page() {
                 </div>
 
                 <div>
-                    <h1 className="text-2xl font-semibold">{profile.name}</h1>
+                    <h1 className="text-2xl text-black font-semibold">{profile.name}</h1>
                     <p className="text-gray-600">{profile.role}</p>
                 </div>
             </div>
 
             {/* About Section */}
             <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-semibold mb-2">Apie asmenį</h2>
-                <p className="text-gray-700">{profile.bio}</p>
+                <h2 className="text-lg text-black font-semibold mb-2">Apie asmenį</h2>
+                <p className="text-black">{profile.bio}</p>
             </div>
 
             {/* Basic Info */}
             <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
-                <ul className="space-y-2 text-gray-700">
+                <h2 className="text-lg text-black font-semibold mb-4">Basic Information</h2>
+                <ul className="space-y-2 text-black">
                     <li>
                         <span className="font-medium">Paštas:</span> {profile.email}
                     </li>

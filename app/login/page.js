@@ -19,6 +19,7 @@ export default function LoginPage() {
             if (res.ok && data.token) {
                 localStorage.setItem("token", data.token);
                 setIsLoggedIn("Logged in successfully!");
+                router.push("/feed");
             } else {
                 setIsLoggedIn(data.message || "Invalid credentials");
             }
