@@ -5,19 +5,54 @@ import ProfileSidebar from "../components/ProfileSidebar";
 
 export default function Page() {
     const [profile, setProfile] = useState(null);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [newName, setNewName] = useState('');
 
     useEffect(() => {
-        setTimeout(() => {
+        fetchUserProfile();
+    }, []);
+
+    const fetchUserProfile = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/user/profile', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await response.json();
+            // Only the name is real from backend, rest is mock
             setProfile({
-                name: "Petras Petraitis",
+                name: data.name,  // Real from backend
                 role: "Programų sistemų studentas",
                 email: "Petras.petrait@ktu.lt",
                 bio: "Stropus studentas besidomintis programavimu.",
                 course: "3 kursas"
             });
-        }, 800);
-        return () => clearTimeout(timer);
-    }, []);
+        } catch (error) {
+            console.error('Failed to fetch profile:', error);
+        }
+    };
+
+    const handleNameUpdate = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/user/profile/name', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ name: newName })
+            });
+
+            if (response.ok) {
+                const updatedProfile = await response.json();
+                setProfile({...profile, name: updatedProfile.name});
+                setIsEditingName(false);
+            }
+        } catch (error) {
+            console.error('Failed to update name:', error);
+        }
+    };
 
     if (!profile) {
         return (
@@ -37,11 +72,47 @@ export default function Page() {
                     {/* Profile Header */}
                     <div id="dashboard" className="bg-white shadow rounded-lg p-6 flex items-center gap-6">
                         <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600">
-                        PP
+                            {profile.name?.charAt(0)}
                         </div>
 
-                        <div>
-                            <h1 className="text-2xl text-black font-semibold">{profile.name}</h1>
+                        <div className="flex-1">
+                            {isEditingName ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="border rounded px-3 py-1 text-black"
+                                        placeholder="New name"
+                                        autoFocus
+                                    />
+                                    <button
+                                        onClick={handleNameUpdate}
+                                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={() => setIsEditingName(false)}
+                                        className="bg-gray-300 text-black px-3 py-1 rounded text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <h1 className="text-2xl text-black font-semibold">{profile.name}</h1>
+                                    <button
+                                        onClick={() => {
+                                            setNewName(profile.name);
+                                            setIsEditingName(true);
+                                        }}
+                                        className="text-blue-500 text-sm hover:text-blue-700"
+                                    >
+                                        Edit
+                                    </button>
+                                </div>
+                            )}
                             <p className="text-gray-600">{profile.role}</p>
                         </div>
                     </div>
