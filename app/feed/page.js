@@ -1,6 +1,7 @@
 "use client";
 import {useEffect, useState} from "react";
 import PrivateRoute from "../components/PrivateRouter";
+import PostCard from "../components/PostCard";
 
 export default function FeedPage(){
     const [posts, setPosts] = useState([]);
@@ -78,28 +79,13 @@ export default function FeedPage(){
                         </div>
                     </div>
 
-                    {/* Cards */}
+                    {/* Cards - Using PostCard Component */}
                     {posts.map((post) => (
-                        <div key={post.id} className="bg-white shadow rounded-lg p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="font-semibold text-gray-900 text-lg hover:text-gray-500">{post.authorName}</h2>
-                                <span className="text-sm text-gray-500">
-                {new Date(post.createdAt).toLocaleString("lt-LT")}
-            </span>
-                            </div>
-                            <p className="text-gray-700 mb-4">{post.content}</p>
-                            <div className="flex items-center justify-between text-gray-500 border-t pt-3">
-                                <button className="flex items-center gap-2 hover:text-gray-700">
-                                    <span>Patinka (0)</span>
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(post.id)}
-                                    className="text-red-500 hover:text-red-700 text-sm"
-                                >
-                                    Ištrinti
-                                </button>
-                            </div>
-                        </div>
+                        <PostCard
+                            key={post.id}
+                            post={post}
+                            onDelete={handleDelete}
+                        />
                     ))}
                 </div>
             </div>
