@@ -7,7 +7,7 @@ export default function Page() {
     const [profile, setProfile] = useState(null);
 
     useEffect(() => {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             setProfile({
                 name: "Petras Petraitis",
                 role: "Programų sistemų studentas",
