@@ -2,6 +2,7 @@
 import {useEffect, useState} from "react";
 import PrivateRoute from "../components/PrivateRouter";
 import PostCard from "../components/PostCard";
+import Navbar from "../components/Navbar";
 
 export default function FeedPage(){
     const [posts, setPosts] = useState([]);
@@ -67,6 +68,7 @@ export default function FeedPage(){
 
     return(
         <PrivateRoute>
+            <Navbar />
             <div className="min-h-screen bg-gray-100 p-8">
                 <div className="max-w-2xl mx-auto space-y-6">
                     <h1 className="text-3xl font-bold text-blue-500 mb-8 text-center">
