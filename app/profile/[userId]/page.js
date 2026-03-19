@@ -81,17 +81,15 @@ export default function UserProfilePage({ params }) {
                     </div>
 
                     {/* Bio */}
-                    {profile.bio && (
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg text-black font-semibold mb-2">Apie asmenį</h2>
-                            <p className="text-black">{profile.bio}</p>
-                        </div>
-                    )}
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-lg text-black font-semibold mb-2">Apie asmenį</h2>
+                        <p className="text-black">{profile.bio || <span className="text-gray-400 text-sm">Bio nenurodyta.</span>}</p>
+                    </div>
 
                     {/* Skills */}
-                    {profile.skills && profile.skills.length > 0 && (
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg text-black font-semibold mb-3">Įgūdžiai</h2>
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-lg text-black font-semibold mb-3">Įgūdžiai</h2>
+                        {profile.skills && profile.skills.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
                                 {profile.skills.map((skill, index) => (
                                     <span
@@ -102,31 +100,23 @@ export default function UserProfilePage({ params }) {
                                     </span>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <p className="text-gray-400 text-sm">Įgūdžių nenurodyta.</p>
+                        )}
+                    </div>
 
                     {/* Basic Info */}
                     <div className="bg-white shadow rounded-lg p-6">
                         <h2 className="text-lg text-black font-semibold mb-4">Pagrindinė informacija</h2>
                         <ul className="space-y-2 text-black">
-                            {profile.email && (
-                                <li>
-                                    <span className="font-medium">Paštas:</span>{" "}
-                                    <span className="text-gray-700">{profile.email}</span>
-                                </li>
-                            )}
-                            {profile.university && (
-                                <li>
-                                    <span className="font-medium">Universitetas:</span>{" "}
-                                    <span className="text-gray-700">{profile.university}</span>
-                                </li>
-                            )}
-                            {profile.studyProgram && (
-                                <li>
-                                    <span className="font-medium">Studijų programa:</span>{" "}
-                                    <span className="text-gray-700">{profile.studyProgram}</span>
-                                </li>
-                            )}
+                            <li>
+                                <span className="font-medium">Universitetas:</span>{" "}
+                                <span className="text-gray-700">{profile.university || "Nenurodyta"}</span>
+                            </li>
+                            <li>
+                                <span className="font-medium">Studijų programa:</span>{" "}
+                                <span className="text-gray-700">{profile.studyProgram || "Nenurodyta"}</span>
+                            </li>
                         </ul>
                     </div>
 

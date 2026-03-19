@@ -10,6 +10,22 @@ export default function FeedPage(){
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState(null);
+
+    const fetchCurrentUser = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:8080/api/user/profile", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setCurrentUserId(data.id);
+            }
+        } catch (error) {
+            console.error("Failed to fetch current user:", error);
+        }
+    };
 
     const fetchPosts = async (pageNum = 0) => {
         const token = localStorage.getItem("token");
@@ -27,6 +43,7 @@ export default function FeedPage(){
 
     useEffect(() => {
         fetchPosts(0);
+        fetchCurrentUser();
     }, []);
 
     const handleCreatePost = async () => {
@@ -105,6 +122,7 @@ export default function FeedPage(){
                                     key={post.id}
                                     post={post}
                                     onDelete={handleDelete}
+                                    currentUserId={currentUserId}
                                 />
                             ))}
 

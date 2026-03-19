@@ -36,26 +36,17 @@ export default function PostCard({ post, onDelete, currentUserId }) {
                     <span>Patinka (0)</span>
                 </button>
 
-{/*     Dont have the backend currentUserId to only show the delete button to maker     */}{/* Only show delete button if user is author */}
-{/*         {isAuthor && ( */}
-{/*           <button */}
-{/*             onClick={() => onDelete(post.id)} */}
-{/*             className="text-red-500 hover:text-red-700 text-sm" */}
-{/*           > */}
-{/*             Ištrinti */}
-{/*           </button> */}
-{/*         )} */}
-
-                {/* Delete button shows for everyone (for now) */}
-                <button
-                    onClick={() => onDelete(post.id)}
-                    className="text-red-500 hover:text-red-700 text-sm transition-colors"
-                >
-                    Ištrinti
-                </button>
+                {isAuthor && (
+                    <button
+                        onClick={() => onDelete(post.id)}
+                        className="text-red-500 hover:text-red-700 text-sm transition-colors"
+                    >
+                        Ištrinti
+                    </button>
+                )}
             </div>
 
-            <CommentSection postId={post.id} />
+            <CommentSection postId={post.id} commentCount={post.commentCount} currentUserId={currentUserId} />
         </div>
     );
 }

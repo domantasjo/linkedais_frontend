@@ -1,13 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-export default function CommentSection({ postId }) {
+export default function CommentSection({ postId, commentCount = 0, currentUserId }) {
     const [comments, setComments] = useState([]);
+    const [localCount, setLocalCount] = useState(commentCount);
     const [newComment, setNewComment] = useState("");
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [editContent, setEditContent] = useState("");
     const [loading, setLoading] = useState(false);
     const [showComments, setShowComments] = useState(false);
+
+    useEffect(() => {
+        setLocalCount(commentCount);
+    }, [commentCount]);
 
     const getToken = () => localStorage.getItem("token");
 
@@ -54,6 +59,7 @@ export default function CommentSection({ postId }) {
             );
             const created = await response.json();
             setComments([...comments, created]);
+            setLocalCount((c) => c + 1);
             setNewComment("");
         } catch (error) {
             console.error("Failed to add comment:", error);
@@ -100,6 +106,7 @@ export default function CommentSection({ postId }) {
                 }
             );
             setComments(comments.filter((c) => c.id !== commentId));
+            setLocalCount((c) => c - 1);
         } catch (error) {
             console.error("Failed to delete comment:", error);
         }
@@ -136,7 +143,7 @@ export default function CommentSection({ postId }) {
                         d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                 </svg>
-                Komentarai ({comments.length})
+                Komentarai ({showComments ? comments.length : localCount})
             </button>
 
             {showComments && (
@@ -208,6 +215,7 @@ export default function CommentSection({ postId }) {
                                             <p className="text-sm text-gray-700">
                                                 {comment.content}
                                             </p>
+                                            {currentUserId && currentUserId === comment.authorId && (
                                             <div className="flex gap-3 mt-2">
                                                 <button
                                                     onClick={() => {
@@ -233,6 +241,7 @@ export default function CommentSection({ postId }) {
                                                     Ištrinti
                                                 </button>
                                             </div>
+                                            )}
                                         </>
                                     )}
                                 </div>

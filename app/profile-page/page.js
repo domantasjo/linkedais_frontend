@@ -129,7 +129,7 @@ export default function Page() {
     if (!profile) {
         return (
             <div className="max-w-3xl mx-auto p-6">
-                <p className="text-black">Loading profile...</p>
+                <p className="text-black">Kraunamas profilis...</p>
             </div>
         );
     }
@@ -309,38 +309,32 @@ export default function Page() {
 
                     {/* Academic Record Section */}
                     <div id="academic-record" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Academic Record</h2>
-                        <p className="text-black">Academic record details go here...</p>
+                        <h2 className="text-lg text-black font-semibold mb-2">Akademiniai rezultatai</h2>
+                        <p className="text-black">Akademinių rezultatų informacija...</p>
                     </div>
 
                     {/* Current Courses Section */}
                     <div id="current-courses" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Current Courses</h2>
-                        <p className="text-black">Current courses details go here...</p>
+                        <h2 className="text-lg text-black font-semibold mb-2">Dabartiniai kursai</h2>
+                        <p className="text-black">Dabartinių kursų informacija...</p>
                     </div>
 
                     {/* Schedule Section */}
                     <div id="schedule" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Schedule</h2>
-                        <p className="text-black">Schedule details go here...</p>
+                        <h2 className="text-lg text-black font-semibold mb-2">Tvarkaraštis</h2>
+                        <p className="text-black">Tvarkaraščio informacija...</p>
                     </div>
 
                     {/* Degree-progress Section */}
                     <div id="degree-progress" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Degree Progress</h2>
-                        <p className="text-black">Degree progress details...</p>
+                        <h2 className="text-lg text-black font-semibold mb-2">Studijų progresas</h2>
+                        <p className="text-black">Studijų progreso informacija...</p>
                     </div>
 
                     {/* Scholarships Section */}
                     <div id="scholarships" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Scholarships</h2>
-                        <p className="text-black">Scholarship details...</p>
-                    </div>
-
-                    {/* Enrollment Section */}
-                    <div id="enrollment" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Enrollment</h2>
-                        <p className="text-black">Enrollment details...</p>
+                        <h2 className="text-lg text-black font-semibold mb-2">Stipendijos</h2>
+                        <p className="text-black">Stipendijų informacija...</p>
                     </div>
                 </div>
             </div>

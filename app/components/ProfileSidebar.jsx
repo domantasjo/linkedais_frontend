@@ -22,31 +22,27 @@ export default function ProfileSidebar() {
             <nav className="flex flex-col gap-3">
                 <button onClick={() => scrollToSection("dashboard")}
                     className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Dashboard
+                    Skydelis
                 </button>
                 <button onClick={() => scrollToSection("academic-record")}
                     className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Academic Record
+                    Akademiniai rezultatai
                 </button>
                 <button onClick={() => scrollToSection("current-courses")}
                     className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Current Courses
+                    Dabartiniai kursai
                 </button>
                 <button onClick={() => scrollToSection("schedule")}
                     className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Schedule
+                    Tvarkaraštis
                 </button>
                 <button onClick={() => scrollToSection("degree-progress")}
                     className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Degree Progress
+                    Studijų progresas
                 </button>
                 <button onClick={() => scrollToSection("scholarships")}
                     className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Scholarships
-                </button>
-                <button onClick={() => scrollToSection("enrollment")}
-                    className="text-black text-left px-2 py-1 rounded hover:bg-gray-200 hover:font-semibold transition-all duration-150">
-                    Enrollment
+                    Stipendijos
                 </button>
             </nav>
 
