@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import PrivateRoute from "../components/PrivateRouter";
 import ProfileSidebar from "../components/ProfileSidebar";
+import Navbar from "../components/Navbar";
 
 export default function Page() {
     const [profile, setProfile] = useState(null);
@@ -63,6 +64,7 @@ export default function Page() {
     }
     return (
         <PrivateRoute>
+            <Navbar />
             <div className="flex w-full max-w-[1200px] mx-auto gap-6 p-6">
                 {/* Sidebar */}
                 <ProfileSidebar />
