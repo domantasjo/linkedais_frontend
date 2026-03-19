@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import CommentSection from "./CommentSection";
 
 export default function PostCard({ post, onDelete, currentUserId }) {
     // Format date nicely
@@ -53,6 +54,8 @@ export default function PostCard({ post, onDelete, currentUserId }) {
                     Ištrinti
                 </button>
             </div>
+
+            <CommentSection postId={post.id} />
         </div>
     );
 }
