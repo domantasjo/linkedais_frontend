@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import CommentSection from "./CommentSection";
+import CommentSection from "../components/CommentSection";
 
 export default function PostCard({ post, onDelete, onLike, currentUserId }) {
     const [liked, setLiked] = useState(false);
@@ -50,6 +50,10 @@ export default function PostCard({ post, onDelete, onLike, currentUserId }) {
                     </button>
                 )}
             </div>
+            <CommentSection
+                postId={post.id}
+                currentUserId={currentUserId}
+            />
         </div>
     );
 }
