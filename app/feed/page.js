@@ -83,6 +83,22 @@ export default function FeedPage(){
         fetchPosts(nextPage);
     };
 
+    const handleLike = async (postId, isLiked) => {
+        const token = localStorage.getItem("token");
+        const method = isLiked ? "DELETE" : "POST";
+        await fetch(`http://localhost:8080/api/posts/${postId}/likes`, {
+            method: method,
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        // Update like count in UI
+        setPosts(posts.map(post =>
+            post.id === postId
+                ? { ...post, likeCount: isLiked ? post.likeCount - 1 : post.likeCount + 1 }
+                : post
+        ));
+    };
+
     return(
         <PrivateRoute>
             <Navbar />
@@ -94,13 +110,13 @@ export default function FeedPage(){
 
                     {/* Create Post Box */}
                     <div className="bg-white shadow rounded-lg p-6">
-                        <textarea
-                            className="w-full border rounded-lg p-3 text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            rows={3}
-                            placeholder="Ką galvojate?"
-                            value={newContent}
-                            onChange={(e) => setNewContent(e.target.value)}
-                        />
+                    <textarea
+                        className="w-full border rounded-lg p-3 text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        rows={3}
+                        placeholder="Ką galvojate?"
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                    />
                         <div className="flex justify-end mt-3">
                             <button
                                 onClick={handleCreatePost}
@@ -122,6 +138,7 @@ export default function FeedPage(){
                                     key={post.id}
                                     post={post}
                                     onDelete={handleDelete}
+                                    onLike={handleLike}
                                     currentUserId={currentUserId}
                                 />
                             ))}
