@@ -1,9 +1,10 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import CommentSection from "./CommentSection";
 
-export default function PostCard({ post, onDelete, currentUserId }) {
-    // Format date nicely
+export default function PostCard({ post, onDelete, onLike, currentUserId }) {
+    const [liked, setLiked] = useState(false);
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleString("lt-LT", {
@@ -15,7 +16,11 @@ export default function PostCard({ post, onDelete, currentUserId }) {
         });
     };
 
-    // Check if current user is the author (for delete button)
+    const handleLike = async () => {
+        await onLike(post.id, liked);
+        setLiked(!liked);
+    };
+
     const isAuthor = currentUserId === post.authorId;
 
     return (
@@ -28,14 +33,14 @@ export default function PostCard({ post, onDelete, currentUserId }) {
                     {formatDate(post.createdAt)}
                 </span>
             </div>
-
             <p className="text-gray-700 mb-4">{post.content}</p>
-
             <div className="flex items-center justify-between text-gray-500 border-t pt-3">
-                <button className="flex items-center gap-2 hover:text-gray-700">
-                    <span>Patinka (0)</span>
+                <button
+                    onClick={handleLike}
+                    className={`flex items-center gap-2 hover:text-blue-500 ${liked ? "text-blue-500" : ""}`}
+                >
+                    <span>Patinka ({post.likeCount})</span>
                 </button>
-
                 {isAuthor && (
                     <button
                         onClick={() => onDelete(post.id)}
@@ -45,8 +50,6 @@ export default function PostCard({ post, onDelete, currentUserId }) {
                     </button>
                 )}
             </div>
-
-            <CommentSection postId={post.id} commentCount={post.commentCount} currentUserId={currentUserId} />
         </div>
     );
 }
