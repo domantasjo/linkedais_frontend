@@ -11,6 +11,7 @@ export default function FeedPage(){
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
 
     const fetchCurrentUser = async () => {
         try {
@@ -27,7 +28,25 @@ export default function FeedPage(){
         }
     };
 
-    const fetchPosts = async (pageNum = 0) => {
+    const fetchBookmarks = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:8080/api/bookmarks", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const bookmarkedSet = new Set(data.content.map(post => post.id));
+                setBookmarkedIds(bookmarkedSet);
+                return bookmarkedSet;
+            }
+        } catch (error) {
+            console.error("Failed to fetch bookmarks:", error);
+        }
+        return new Set();
+    };
+
+    const fetchPosts = async (pageNum = 0, bookmarkedSetParam) => {
         const token = localStorage.getItem("token");
         const response = await fetch(`http://localhost:8080/api/posts?page=${pageNum}&size=5`, {
             headers: {
@@ -36,14 +55,21 @@ export default function FeedPage(){
         });
         const data = await response.json();
         if (data.length < 5) setHasMore(false);
-        if (pageNum === 0) setPosts(data);
-        else setPosts(prev => [...prev, ...data]);
+
+        const postsWithBookmarkStatus = data.map(post => ({...post, isBookmarked: bookmarkedSetParam.has(post.id)}));
+
+        if (pageNum === 0) setPosts(postsWithBookmarkStatus);
+        else setPosts(prev => [...prev, ...postsWithBookmarkStatus]);
         setLoading(false);
     };
 
     useEffect(() => {
-        fetchPosts(0);
-        fetchCurrentUser();
+        const init = async () => {
+            await fetchCurrentUser();
+            const bookmarkedSet = await fetchBookmarks();
+            await fetchPosts(0, bookmarkedSet);
+        };
+        init();
     }, []);
 
     const handleCreatePost = async () => {
@@ -60,7 +86,7 @@ export default function FeedPage(){
         });
 
         const newPost = await response.json();
-        setPosts([newPost, ...posts]);
+        setPosts([{ ...newPost, isBookmarked: false }, ...posts]);
         setNewContent("");
     };
 
@@ -80,7 +106,7 @@ export default function FeedPage(){
     const handleLoadMore = () => {
         const nextPage = page + 1;
         setPage(nextPage);
-        fetchPosts(nextPage);
+        fetchPosts(nextPage, bookmarkedIds);
     };
 
     const handleLike = async (postId, isLiked) => {
@@ -97,6 +123,40 @@ export default function FeedPage(){
                 ? { ...post, likeCount: isLiked ? post.likeCount - 1 : post.likeCount + 1 }
                 : post
         ));
+    };
+
+    const handleBookmark = async (postId, isBookmarked) => {
+        const token = localStorage.getItem("token");
+        try {
+            if (isBookmarked) {
+                // Remove bookmark
+                await fetch(`http://localhost:8080/api/bookmarks/${postId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                setBookmarkedIds(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(postId);
+                    return newSet;
+                });
+            } else {
+                // Add bookmark
+                await fetch(`http://localhost:8080/api/bookmarks/${postId}`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                setBookmarkedIds(prev => new Set(prev).add(postId));
+            }
+
+            // Update posts state
+            setPosts(posts.map(post =>
+                post.id === postId
+                    ? { ...post, isBookmarked: !isBookmarked  }
+                    : post
+            ));
+        } catch (error) {
+            console.error("Failed to toggle bookmark:", error);
+        }
     };
 
     return(
@@ -139,6 +199,7 @@ export default function FeedPage(){
                                     post={post}
                                     onDelete={handleDelete}
                                     onLike={handleLike}
+                                    onBookmark={handleBookmark}
                                     currentUserId={currentUserId}
                                 />
                             ))}

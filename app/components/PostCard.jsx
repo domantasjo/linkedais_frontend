@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import CommentSection from "../components/CommentSection";
 
-export default function PostCard({ post, onDelete, onLike, currentUserId }) {
+export default function PostCard({ post, onDelete, onLike, onBookmark, currentUserId }) {
     const [liked, setLiked] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
+    const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -19,6 +21,18 @@ export default function PostCard({ post, onDelete, onLike, currentUserId }) {
     const handleLike = async () => {
         await onLike(post.id, liked);
         setLiked(!liked);
+    };
+
+    const handleBookmark = async () => {
+        setIsBookmarkLoading(true);
+        try {
+            await onBookmark(post.id, isBookmarked);
+            setIsBookmarked(!isBookmarked);
+        } catch (error) {
+            console.error('Error toggling bookmark:', error);
+        } finally {
+            setIsBookmarkLoading(false);
+        }
     };
 
     const isAuthor = currentUserId === post.authorId;
@@ -41,6 +55,19 @@ export default function PostCard({ post, onDelete, onLike, currentUserId }) {
                 >
                     <span>Patinka ({post.likeCount})</span>
                 </button>
+
+                <button
+                    onClick={handleBookmark}
+                    disabled={isBookmarkLoading}
+                    className={`flex items-center gap-2 transition-colors ${
+                        isBookmarked
+                            ? 'text-yellow-500 hover:text-yellow-600'
+                            : 'text-gray-500 hover:text-yellow-500'
+                    } ${isBookmarkLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <span>{isBookmarked ? 'Išsaugota' : 'Išsaugoti'}</span>
+                </button>
+
                 {isAuthor && (
                     <button
                         onClick={() => onDelete(post.id)}
