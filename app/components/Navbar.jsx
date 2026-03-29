@@ -162,6 +162,12 @@ export default function Navbar() {
                     >
                         Profilis
                     </button>
+                    <button
+                        onClick={() => router.push("/bookmarks")}
+                        className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    >
+                        Išsaugoti įrašai
+                    </button>
                 </div>
             </div>
         </nav>
