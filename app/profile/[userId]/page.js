@@ -9,9 +9,11 @@ export default function UserProfilePage({ params }) {
     const router = useRouter();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [connectionStatus, setConnectionStatus] = useState("NONE");
 
     useEffect(() => {
         fetchUserProfile();
+        fetchConnectionStatus();
     }, [userId]);
 
     const fetchUserProfile = async () => {
@@ -33,6 +35,59 @@ export default function UserProfilePage({ params }) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchConnectionStatus = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8080/api/connections/status/${userId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+            if (response.ok) {
+                const data = await response.text();
+                setConnectionStatus(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch connection status:", error);
+        }
+    };
+
+    const handleConnect = async () => {
+        try {
+            await fetch(
+                `http://localhost:8080/api/connections/send/${userId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+            setConnectionStatus("PENDING");
+        } catch (error) {
+            console.error("Failed to send connection request:", error);
+        }
+    };
+
+    const getConnectButton = () => {
+        if (connectionStatus === "ACCEPTED") {
+            return <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm">Sujungti ✓</span>;
+        }
+        if (connectionStatus === "PENDING") {
+            return <span className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm">Laukiama...</span>;
+        }
+        return (
+            <button
+                onClick={handleConnect}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
+            >
+                Pridėti į kontaktus
+            </button>
+        );
     };
 
     if (loading) {
@@ -67,7 +122,7 @@ export default function UserProfilePage({ params }) {
                         <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600">
                             {profile.name?.charAt(0)}
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <h1 className="text-2xl text-black font-semibold">
                                 {profile.name}
                             </h1>
@@ -77,6 +132,9 @@ export default function UserProfilePage({ params }) {
                             {profile.university && (
                                 <p className="text-gray-500 text-sm">{profile.university}</p>
                             )}
+                        </div>
+                        <div>
+                            {getConnectButton()} {}
                         </div>
                     </div>
 
@@ -92,10 +150,7 @@ export default function UserProfilePage({ params }) {
                         {profile.skills && profile.skills.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
                                 {profile.skills.map((skill, index) => (
-                                    <span
-                                        key={index}
-                                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                                    >
+                                    <span key={index} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
                                         {skill}
                                     </span>
                                 ))}
