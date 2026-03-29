@@ -37,6 +37,7 @@ export default function Page() {
                 university: data.university || "",
                 studyProgram: data.studyProgram || "",
                 skills: data.skills || [],
+                courses: data.courses || [],
             });
         } catch (error) {
             console.error('Failed to fetch profile:', error);
@@ -287,6 +288,21 @@ export default function Page() {
                             </div>
                         )}
                     </div>
+
+                    {/* Courses Section */}
+                    {(!isEditing && profile.courses && profile.courses.length > 0) && (
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg text-black font-semibold mb-4">Mano kursai</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {profile.courses.map(course => (
+                                    <div key={course.id} className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition">
+                                        <h3 className="font-semibold text-black mb-1">{course.name}</h3>
+                                        <p className="text-gray-600 text-sm">Dėstytojas: {course.instructor}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Edit action buttons */}
                     {isEditing && (

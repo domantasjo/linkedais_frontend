@@ -175,6 +175,22 @@ export default function UserProfilePage({ params }) {
                         </ul>
                     </div>
 
+                    {/* Courses Section */}
+                    {profile.courses && profile.courses.length > 0 && (
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg text-black font-semibold mb-4">Akademinė informacija</h2>
+                            <h3 className="text-base text-gray-700 font-medium mb-3">Dabartiniai kursai</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {profile.courses.map(course => (
+                                    <div key={course.id} className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition">
+                                        <h4 className="font-semibold text-black mb-1">{course.name}</h4>
+                                        <p className="text-gray-600 text-sm">Dėstytojas: {course.instructor}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Back button */}
                     <button
                         onClick={() => router.back()}
