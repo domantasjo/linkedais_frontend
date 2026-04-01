@@ -9,12 +9,14 @@ export default function UserProfilePage({ params }) {
     const cleanUserId = userId?.toString().split(":")[0];
     const router = useRouter();
     const [profile, setProfile] = useState(null);
+    const [academic, setAcademic] = useState(null);
     const [loading, setLoading] = useState(true);
     const [connectionStatus, setConnectionStatus] = useState("NONE");
 
     useEffect(() => {
         fetchUserProfile();
         fetchConnectionStatus();
+        fetchAcademicDashboard();
     }, [userId]);
 
     const fetchUserProfile = async () => {
@@ -35,6 +37,25 @@ export default function UserProfilePage({ params }) {
             console.error("Failed to fetch user profile:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAcademicDashboard = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8080/api/users/${Number(cleanUserId)}/academic`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+            if (response.ok) {
+                const data = await response.json();
+                setAcademic(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch academic dashboard:", error);
         }
     };
 
@@ -176,19 +197,46 @@ export default function UserProfilePage({ params }) {
                         </ul>
                     </div>
 
-                    {/* Courses Section */}
-                    {profile.courses && profile.courses.length > 0 && (
+                    {/* Academic Dashboard */}
+                    {academic && (
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg text-black font-semibold mb-4">Akademinė informacija</h2>
-                            <h3 className="text-base text-gray-700 font-medium mb-3">Dabartiniai kursai</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {profile.courses.map(course => (
-                                    <div key={course.id} className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition">
-                                        <h4 className="font-semibold text-black mb-1">{course.name}</h4>
-                                        <p className="text-gray-600 text-sm">Dėstytojas: {course.instructor}</p>
-                                    </div>
-                                ))}
+
+                            {/* Degree Progress */}
+                            <div className="mb-4">
+                                <h3 className="text-base text-gray-700 font-medium mb-1">Studijų progresas</h3>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${academic.degreeProgress || 0}%` }}></div>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">{academic.degreeProgress || 0}% baigta</p>
                             </div>
+
+                            {/* Upcoming Schedule */}
+                            <div className="mb-4">
+                                <h3 className="text-base text-gray-700 font-medium mb-1">Artėjantis tvarkaraštis</h3>
+                                <p className="text-gray-600 text-sm whitespace-pre-wrap">{academic.upcomingSchedule || "Nėra artėjančių užsiėmimų"}</p>
+                            </div>
+
+                            {/* Academic Record Summary */}
+                            <div className="mb-4">
+                                <h3 className="text-base text-gray-700 font-medium mb-1">Akademinė suvestinė</h3>
+                                <p className="text-gray-600 text-sm whitespace-pre-wrap">{academic.academicRecordSummary || "Nėra informacijos"}</p>
+                            </div>
+
+                            {/* Current Courses */}
+                            {academic.courses && academic.courses.length > 0 && (
+                                <div>
+                                    <h3 className="text-base text-gray-700 font-medium mb-3">Dabartiniai kursai</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {academic.courses.map(course => (
+                                            <div key={course.id} className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition">
+                                                <h4 className="font-semibold text-black mb-1">{course.name}</h4>
+                                                <p className="text-gray-600 text-sm">Dėstytojas: {course.instructor}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
