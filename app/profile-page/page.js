@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import PrivateRoute from "../components/PrivateRouter";
 import ProfileSidebar from "../components/ProfileSidebar";
 import Navbar from "../components/Navbar";
+import DegreeProgress from "../components/DegreeProgress";
 
 export default function Page() {
     const [profile, setProfile] = useState(null);
@@ -31,6 +32,7 @@ export default function Page() {
             });
             const data = await response.json();
             setProfile({
+                id: data.id,
                 name: data.name || "",
                 email: data.email || "",
                 bio: data.bio || "",
@@ -343,8 +345,12 @@ export default function Page() {
 
                     {/* Degree-progress Section */}
                     <div id="degree-progress" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Studijų progresas</h2>
-                        <p className="text-black">Studijų progreso informacija...</p>
+                        <h2 className="text-lg text-black font-semibold mb-4">Studijų progresas</h2>
+                        {profile?.id ? (
+                            <DegreeProgress userId={profile.id} />
+                        ) : (
+                            <p className="text-gray-500 text-sm">Loading profile...</p>
+                        )}
                     </div>
 
                     {/* Scholarships Section */}
