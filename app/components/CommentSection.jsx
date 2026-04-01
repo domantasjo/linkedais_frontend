@@ -29,6 +29,7 @@ export default function CommentSection({ postId, commentCount = 0, currentUserId
             );
             const data = await response.json();
             setComments(data);
+            setLocalCount(data.length); // ← pridėkite šitą
         } catch (error) {
             console.error("Failed to fetch comments:", error);
         } finally {
