@@ -6,6 +6,7 @@ import Navbar from "../../components/Navbar";
 
 export default function UserProfilePage({ params }) {
     const { userId } = use(params);
+    const cleanUserId = userId?.toString().split(":")[0];
     const router = useRouter();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function UserProfilePage({ params }) {
     const fetchUserProfile = async () => {
         try {
             const response = await fetch(
-                `http://localhost:8080/api/users/${userId}`,
+                `http://localhost:8080/api/users/${Number(cleanUserId)}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -40,7 +41,7 @@ export default function UserProfilePage({ params }) {
     const fetchConnectionStatus = async () => {
         try {
             const response = await fetch(
-                `http://localhost:8080/api/connections/status/${userId}`,
+                `http://localhost:8080/api/connections/status/${Number(cleanUserId)}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -59,7 +60,7 @@ export default function UserProfilePage({ params }) {
     const handleConnect = async () => {
         try {
             await fetch(
-                `http://localhost:8080/api/connections/send/${userId}`,
+                `http://localhost:8080/api/connections/send/${Number(cleanUserId)}`,
                 {
                     method: "POST",
                     headers: {

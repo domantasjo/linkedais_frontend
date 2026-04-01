@@ -157,6 +157,12 @@ export default function Navbar() {
                         Naujienos
                     </button>
                     <button
+                        onClick={() => router.push("/notifications")}
+                        className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    >
+                        Pranešimai
+                    </button>
+                    <button
                         onClick={() => router.push("/profile-page")}
                         className="text-sm text-gray-600 hover:text-gray-900 transition"
                     >

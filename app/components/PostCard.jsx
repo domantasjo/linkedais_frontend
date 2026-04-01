@@ -80,6 +80,7 @@ export default function PostCard({ post, onDelete, onLike, onBookmark, currentUs
             <CommentSection
                 postId={post.id}
                 currentUserId={currentUserId}
+                commentCount={post.commentCount || 0}
             />
         </div>
     );
