@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [actedIds, setActedIds] = useState(new Set());
 
     const getToken = () => localStorage.getItem("token");
 
@@ -64,6 +65,7 @@ export default function NotificationsPage() {
             method: "PUT",
             headers: { Authorization: `Bearer ${getToken()}` },
         });
+        setActedIds(prev => new Set(prev).add(notificationId));
         setNotifications(notifications.map(n =>
             n.id === notificationId ? { ...n, read: true } : n
         ));
@@ -78,6 +80,7 @@ export default function NotificationsPage() {
             method: "PUT",
             headers: { Authorization: `Bearer ${getToken()}` },
         });
+        setActedIds(prev => new Set(prev).add(notificationId));
         setNotifications(notifications.map(n =>
             n.id === notificationId ? { ...n, read: true } : n
         ));
@@ -134,8 +137,8 @@ export default function NotificationsPage() {
                                     </div>
 
                                     <div className="flex items-center gap-2 ml-4">
-                                        {/* Show accept/reject only for unread connection requests */}
-                                        {notification.type === "CONNECTION_REQUEST" && !notification.read && (
+                                        {/* Show accept/reject for connection requests that haven't been acted on */}
+                                        {notification.type === "CONNECTION_REQUEST" && !actedIds.has(notification.id) && (
                                             <>
                                                 <button
                                                     onClick={() => handleAccept(notification.connectionId, notification.id)}
