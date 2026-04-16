@@ -3,10 +3,20 @@ import { useEffect, useState } from "react";
 import PrivateRoute from "../components/PrivateRouter";
 import Navbar from "../components/Navbar";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+function toArray(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.content)) return payload.content;
+    return [];
+}
+
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actedIds, setActedIds] = useState(new Set());
+    const [actionError, setActionError] = useState("");
 
     const getToken = () => localStorage.getItem("token");
 
@@ -16,13 +26,52 @@ export default function NotificationsPage() {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch("http://localhost:8080/api/notifications", {
+            setLoading(true);
+            const token = getToken();
+            const response = await fetch(`${API_BASE}/api/notifications`, {
                 headers: { Authorization: `Bearer ${getToken()}` },
             });
-            if (response.ok) {
-                const data = await response.json();
-                setNotifications(data);
+
+            if (!response.ok) {
+                throw new Error("Nepavyko gauti pranešimų.");
             }
+
+            const data = toArray(await response.json());
+            const initialActedIds = new Set(
+                data
+                    .filter((n) => n?.type === "CONNECTION_REQUEST" && n?.read)
+                    .map((n) => n.id)
+            );
+
+            // If backend already moved request out of PENDING, don't show accept/reject again after refresh.
+            try {
+                const connectionsRes = await fetch(`${API_BASE}/api/connections`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (connectionsRes.ok) {
+                    const connections = toArray(await connectionsRes.json());
+                    const handledConnectionIds = new Set(
+                        connections
+                            .filter((c) => c?.id && c?.status && c.status !== "PENDING")
+                            .map((c) => Number(c.id))
+                    );
+
+                    data.forEach((notification) => {
+                        if (
+                            notification?.type === "CONNECTION_REQUEST" &&
+                            handledConnectionIds.has(Number(notification?.connectionId))
+                        ) {
+                            initialActedIds.add(notification.id);
+                        }
+                    });
+                }
+            } catch (connectionLookupError) {
+                console.warn("Failed to verify connection request states:", connectionLookupError);
+            }
+
+            setActedIds(initialActedIds);
+            setNotifications(data);
         } catch (error) {
             console.error("Failed to fetch notifications:", error);
         } finally {
@@ -32,11 +81,11 @@ export default function NotificationsPage() {
 
     const handleMarkAsRead = async (notificationId) => {
         try {
-            await fetch(`http://localhost:8080/api/notifications/${notificationId}/read`, {
+            await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${getToken()}` },
             });
-            setNotifications(notifications.map(n =>
+            setNotifications((prev) => prev.map(n =>
                 n.id === notificationId ? { ...n, read: true } : n
             ));
         } catch (error) {
@@ -46,44 +95,68 @@ export default function NotificationsPage() {
 
     const handleMarkAllAsRead = async () => {
         try {
-            await fetch("http://localhost:8080/api/notifications/read-all", {
+            await fetch(`${API_BASE}/api/notifications/read-all`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${getToken()}` },
             });
-            setNotifications(notifications.map(n => ({ ...n, read: true })));
+            setNotifications((prev) => prev.map(n => ({ ...n, read: true })));
         } catch (error) {
             console.error("Failed to mark all notifications as read:", error);
         }
     };
 
     const handleAccept = async (connectionId, notificationId) => {
-        await fetch(`http://localhost:8080/api/connections/accept/${connectionId}`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${getToken()}` },
-        });
-        await fetch(`http://localhost:8080/api/notifications/${notificationId}/read`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${getToken()}` },
-        });
-        setActedIds(prev => new Set(prev).add(notificationId));
-        setNotifications(notifications.map(n =>
-            n.id === notificationId ? { ...n, read: true } : n
-        ));
+        setActionError("");
+        try {
+            const acceptRes = await fetch(`${API_BASE}/api/connections/accept/${connectionId}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+
+            if (!acceptRes.ok) {
+                throw new Error("Nepavyko priimti ryšio užklausos.");
+            }
+
+            await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+
+            setActedIds(prev => new Set(prev).add(notificationId));
+            setNotifications((prev) => prev.map(n =>
+                n.id === notificationId ? { ...n, read: true } : n
+            ));
+        } catch (error) {
+            console.error("Failed to accept connection request:", error);
+            setActionError(error.message || "Nepavyko atnaujinti užklausos.");
+        }
     };
 
     const handleReject = async (connectionId, notificationId) => {
-        await fetch(`http://localhost:8080/api/connections/reject/${connectionId}`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${getToken()}` },
-        });
-        await fetch(`http://localhost:8080/api/notifications/${notificationId}/read`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${getToken()}` },
-        });
-        setActedIds(prev => new Set(prev).add(notificationId));
-        setNotifications(notifications.map(n =>
-            n.id === notificationId ? { ...n, read: true } : n
-        ));
+        setActionError("");
+        try {
+            const rejectRes = await fetch(`${API_BASE}/api/connections/reject/${connectionId}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+
+            if (!rejectRes.ok) {
+                throw new Error("Nepavyko atmesti ryšio užklausos.");
+            }
+
+            await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+
+            setActedIds(prev => new Set(prev).add(notificationId));
+            setNotifications((prev) => prev.map(n =>
+                n.id === notificationId ? { ...n, read: true } : n
+            ));
+        } catch (error) {
+            console.error("Failed to reject connection request:", error);
+            setActionError(error.message || "Nepavyko atnaujinti užklausos.");
+        }
     };
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -106,6 +179,12 @@ export default function NotificationsPage() {
                             </button>
                         )}
                     </div>
+
+                    {actionError && (
+                        <div className="bg-red-50 text-red-600 text-sm rounded-lg px-4 py-3 border border-red-100">
+                            {actionError}
+                        </div>
+                    )}
 
                     {loading ? (
                         <p className="text-center text-gray-500">Kraunama...</p>
@@ -138,7 +217,7 @@ export default function NotificationsPage() {
 
                                     <div className="flex items-center gap-2 ml-4">
                                         {/* Show accept/reject for connection requests that haven't been acted on */}
-                                        {notification.type === "CONNECTION_REQUEST" && !actedIds.has(notification.id) && (
+                                        {notification.type === "CONNECTION_REQUEST" && !notification.read && !actedIds.has(notification.id) && (
                                             <>
                                                 <button
                                                     onClick={() => handleAccept(notification.connectionId, notification.id)}
