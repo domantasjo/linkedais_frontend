@@ -157,6 +157,12 @@ export default function UserProfilePage({ params }) {
                         </div>
                         <div>
                             {getConnectButton()} {}
+                            <button
+                                onClick={() => router.push(`/messages/${cleanUserId}`)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 ml-2"
+                            >
+                                Rašyti žinutę
+                            </button>
                         </div>
                     </div>
 

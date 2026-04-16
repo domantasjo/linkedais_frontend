@@ -1,29 +1,220 @@
 "use client";
-import PrivateRoute from "../components/PrivateRouter";
-import Navbar from "../components/Navbar";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+function normalizeConnections(payload, currentUserId) {
+    if (!Array.isArray(payload)) return [];
+
+    const byId = new Map();
+
+    payload.forEach((item) => {
+        let user = null;
+        const status = item?.status || "ACCEPTED";
+
+        if (item?.user?.id) {
+            user = item.user;
+        } else if (item?.id && item?.name && !item?.requesterId && !item?.receiverId) {
+            user = item;
+        } else if (item?.requesterId && item?.receiverId) {
+            user = Number(item.requesterId) === Number(currentUserId)
+                ? { id: item.receiverId, name: item.receiverName, studyProgram: item.receiverStudyProgram }
+                : { id: item.requesterId, name: item.requesterName, studyProgram: item.requesterStudyProgram };
+        }
+
+        if (!user || !user.id || Number(user.id) === Number(currentUserId)) return;
+        if (status && status !== "ACCEPTED") return;
+
+        byId.set(Number(user.id), {
+            id: Number(user.id),
+            name: user.name || "Nežinomas vartotojas",
+            studyProgram: user.studyProgram || "",
+        });
+    });
+
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function loadAcceptedConnections(token, currentUserId) {
+    const endpoints = [
+        `${API_BASE}/api/connections/accepted`,
+        `${API_BASE}/api/connections`,
+    ];
+
+    for (const endpoint of endpoints) {
+        try {
+            const res = await fetch(endpoint, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (res.ok) {
+                const payload = await res.json();
+                return normalizeConnections(payload, currentUserId);
+            }
+
+            console.warn(`Connections endpoint failed: ${endpoint} (${res.status})`);
+        } catch (endpointError) {
+            console.warn(`Connections endpoint unreachable: ${endpoint}`, endpointError);
+        }
+    }
+
+    return [];
+}
 
 export default function MessagesPage() {
+    const [currentUser, setCurrentUser] = useState(null);
+    const [conversations, setConversations] = useState([]);
+    const [connections, setConnections] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const token = useMemo(
+        () => (typeof window !== "undefined" ? localStorage.getItem("token") : null),
+        []
+    );
+
+    useEffect(() => {
+        async function loadInbox() {
+            if (!token) {
+                setError("Prisijungimo sesija nerasta. Prisijunkite iš naujo.");
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+
+                const profileRes = await fetch(`${API_BASE}/api/user/profile`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!profileRes.ok) throw new Error("Nepavyko gauti vartotojo profilio.");
+                const profile = await profileRes.json();
+                setCurrentUser(profile);
+
+                const conversationsRes = await fetch(`${API_BASE}/api/messages/conversations?userId=${profile.id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (!conversationsRes.ok) throw new Error("Nepavyko užkrauti pokalbių.");
+                setConversations(await conversationsRes.json());
+
+                const acceptedConnections = await loadAcceptedConnections(token, profile.id);
+                setConnections(acceptedConnections);
+            } catch (err) {
+                setError(err.message || "Failed to load conversations.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadInbox();
+    }, [token]);
+
     return (
-        <PrivateRoute>
-            <Navbar />
-            <div className="min-h-screen bg-gray-100 p-8">
-                <div className="max-w-2xl mx-auto space-y-4">
-                    <h1 className="text-3xl font-bold text-blue-500 mb-8 text-center">
-                        Žinutės
-                    </h1>
-                    <div className="bg-white shadow rounded-lg p-12 text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <h2 className="text-xl font-semibold text-gray-700 mb-2">
-                            Nėra žinučių
-                        </h2>
-                        <p className="text-gray-500">
-                            Žinučių funkcija bus prieinama netrukus.
-                        </p>
-                    </div>
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-2xl mx-auto py-10 px-4">
+
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Žinutės</h1>
+                    <p className="text-sm text-gray-500 mt-1">Tavo pokalbiai ir greita nauja žinutė ryšiams</p>
                 </div>
+
+                {/* Quick connections actions */}
+                {!loading && !error && connections.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Ryšiai</p>
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {connections.map((connection) => (
+                                <Link
+                                    key={connection.id}
+                                    href={`/messages/${connection.id}`}
+                                    className="px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-sm whitespace-nowrap"
+                                >
+                                    {connection.name}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* States */}
+                {loading && (
+                    <div className="space-y-3">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="bg-white rounded-xl p-4 flex items-center gap-4 animate-pulse">
+                                <div className="w-12 h-12 rounded-full bg-gray-200" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-3 bg-gray-200 rounded w-1/3" />
+                                    <div className="h-3 bg-gray-100 rounded w-2/3" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {error && (
+                    <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 border border-red-100">
+                        {error}
+                    </div>
+                )}
+
+                {!loading && !error && conversations.length === 0 && (
+                    <div className="text-center py-20 text-gray-400">
+                        <p className="text-4xl mb-3">✉️</p>
+                        <p className="font-medium text-gray-600">Pokalbių dar nėra</p>
+                        <p className="text-sm mt-1">Pasirink ryšį viršuje ir parašyk pirmą žinutę.</p>
+                    </div>
+                )}
+
+                {/* Conversation list */}
+                {!loading && !error && conversations.length > 0 && (
+                    <ul className="space-y-2">
+                        {conversations.map((convo) => {
+                            const other =
+                                convo.senderId === currentUser?.id
+                                    ? { id: convo.receiverId, name: convo.receiverName }
+                                    : { id: convo.senderId, name: convo.senderName };
+
+                            const preview = convo.deleted
+                                ? "This message was deleted."
+                                : convo.content;
+
+                            const time = new Date(convo.createdAt).toLocaleDateString([], {
+                                month: "short",
+                                day: "numeric",
+                            });
+
+                            return (
+                                <li key={convo.id}>
+                                    <Link
+                                        href={`/messages/${other.id}`}
+                                        className="flex items-center gap-4 bg-white hover:bg-blue-50 transition-colors rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 group"
+                                    >
+                                        {/* Avatar */}
+                                        <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold text-lg flex items-center justify-center flex-shrink-0">
+                                            {other.name?.[0]?.toUpperCase() || "?"}
+                                        </div>
+
+                                        {/* Preview */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                                                {other.name}
+                                            </p>
+                                            <p className="text-sm text-gray-400 truncate mt-0.5">{preview}</p>
+                                        </div>
+
+                                        {/* Time */}
+                                        <span className="text-xs text-gray-400 flex-shrink-0">{time}</span>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
             </div>
-        </PrivateRoute>
+        </div>
     );
 }
