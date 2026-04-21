@@ -4,6 +4,7 @@ import PrivateRoute from "../components/PrivateRouter";
 import ProfileSidebar from "../components/ProfileSidebar";
 import Navbar from "../components/Navbar";
 import DegreeProgress from "../components/DegreeProgress";
+import ScheduleView from "../components/ScheduleView";
 
 export default function Page() {
     const [profile, setProfile] = useState(null);
@@ -339,8 +340,12 @@ export default function Page() {
 
                     {/* Schedule Section */}
                     <div id="schedule" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Tvarkaraštis</h2>
-                        <p className="text-black">Tvarkaraščio informacija...</p>
+                        <h2 className="text-lg text-black font-semibold mb-4">Tvarkaraštis</h2>
+                        {profile?.id ? (
+                            <ScheduleView userId={profile.id} />
+                        ) : (
+                            <p className="text-gray-500 text-sm">Loading schedule...</p>
+                        )}
                     </div>
 
                     {/* Degree-progress Section */}
