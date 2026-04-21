@@ -10,29 +10,46 @@ export default function Navbar() {
     const [showResults, setShowResults] = useState(false);
     const [loading, setLoading] = useState(false);
     const [userName, setUserName] = useState("");
+    const [isAdmin, setIsAdmin] = useState(false);
     const searchRef = useRef(null);
     const debounceRef = useRef(null);
 
     const getToken = () => localStorage.getItem("token");
 
-    // Fetch current user name for profile picture
+    // Fetch user info and check if admin
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchUserAndCheckAdmin = async () => {
+            const token = getToken();
+            if (!token) return;
+
             try {
-                const response = await fetch("http://localhost:8080/api/user/profile", {
-                    headers: { Authorization: `Bearer ${getToken()}` },
+                // 1. Gauname vartotojo vardą (profilio nuotraukai)
+                const profileRes = await fetch("http://localhost:8080/api/user/profile", {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
-                if (response.ok) {
-                    const data = await response.json();
+                if (profileRes.ok) {
+                    const data = await profileRes.json();
                     setUserName(data.name || "");
                 }
+
+                // 2. Patikriname roles (Ar turime ADMIN?)
+                const roleRes = await fetch("http://localhost:8080/api/user/me", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (roleRes.ok) {
+                    const data = await roleRes.json();
+                    const hasAdminRole = data.authorities.some(auth => {
+                        const a = auth.authority.toUpperCase();
+                        return a === "ADMIN" || a === "ROLE_ADMIN";
+                    });
+                    setIsAdmin(hasAdminRole); // Jei tiesa, Navbar parodys mygtuką
+                }
             } catch (error) {
-                console.error("Failed to fetch user:", error);
+                console.error("Klaida gaunant Navbar duomenis:", error);
             }
         };
-        fetchUser();
-    }, []);
-
+        fetchUserAndCheckAdmin();
+    },[]);
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -226,6 +243,24 @@ export default function Navbar() {
                             <span className="text-[10px] mt-0.5">{item.label}</span>
                         </button>
                     ))}
+
+                    {/* ADMIN PANEL MYGTUKAS (rodomas tik jei isAdmin yra true) */}
+                    {isAdmin && (
+                        <button
+                            onClick={() => router.push("/admin")}
+                            className={`flex flex-col items-center px-3 py-1 rounded-md transition ${
+                                isActive("/admin")
+                                    ? "text-blue-500 border-b-2 border-blue-500"
+                                    : "text-red-500 hover:text-red-700 hover:bg-red-50"
+                            }`}
+                            title="Admin Panelė"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span className="text-[10px] mt-0.5 font-bold">Admin</span>
+                        </button>
+                    )}
 
                     {/* Profile Picture */}
                     <button
