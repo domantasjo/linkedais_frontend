@@ -2,66 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import PrivateRoute from "../components/PrivateRouter";
+import Navbar from "../components/Navbar";
+import { fetchCurrentUser, loadAcceptedConnections } from "../lib/connections";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
-function normalizeConnections(payload, currentUserId) {
-    if (!Array.isArray(payload)) return [];
-
-    const byId = new Map();
-
-    payload.forEach((item) => {
-        let user = null;
-        const status = item?.status || "ACCEPTED";
-
-        if (item?.user?.id) {
-            user = item.user;
-        } else if (item?.id && item?.name && !item?.requesterId && !item?.receiverId) {
-            user = item;
-        } else if (item?.requesterId && item?.receiverId) {
-            user = Number(item.requesterId) === Number(currentUserId)
-                ? { id: item.receiverId, name: item.receiverName, studyProgram: item.receiverStudyProgram }
-                : { id: item.requesterId, name: item.requesterName, studyProgram: item.requesterStudyProgram };
-        }
-
-        if (!user || !user.id || Number(user.id) === Number(currentUserId)) return;
-        if (status && status !== "ACCEPTED") return;
-
-        byId.set(Number(user.id), {
-            id: Number(user.id),
-            name: user.name || "Nežinomas vartotojas",
-            studyProgram: user.studyProgram || "",
-        });
-    });
-
-    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
-}
-
-async function loadAcceptedConnections(token, currentUserId) {
-    const endpoints = [
-        `${API_BASE}/api/connections/accepted`,
-        `${API_BASE}/api/connections`,
-    ];
-
-    for (const endpoint of endpoints) {
-        try {
-            const res = await fetch(endpoint, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (res.ok) {
-                const payload = await res.json();
-                return normalizeConnections(payload, currentUserId);
-            }
-
-            console.warn(`Connections endpoint failed: ${endpoint} (${res.status})`);
-        } catch (endpointError) {
-            console.warn(`Connections endpoint unreachable: ${endpoint}`, endpointError);
-        }
-    }
-
-    return [];
-}
 
 export default function MessagesPage() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -87,22 +32,26 @@ export default function MessagesPage() {
                 setLoading(true);
                 setError(null);
 
-                const profileRes = await fetch(`${API_BASE}/api/user/profile`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!profileRes.ok) throw new Error("Nepavyko gauti vartotojo profilio.");
-                const profile = await profileRes.json();
+                const profile = await fetchCurrentUser(token);
                 setCurrentUser(profile);
 
                 const conversationsRes = await fetch(`${API_BASE}/api/messages/conversations?userId=${profile.id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (!conversationsRes.ok) throw new Error("Nepavyko užkrauti pokalbių.");
+                if (!conversationsRes.ok) {
+                    setError("Nepavyko uzkrauti pokalbiu.");
+                    setConversations([]);
+                    return;
+                }
                 setConversations(await conversationsRes.json());
 
-                const acceptedConnections = await loadAcceptedConnections(token, profile.id);
-                setConnections(acceptedConnections);
+                try {
+                    const acceptedConnections = await loadAcceptedConnections(token, profile.id);
+                    setConnections(acceptedConnections);
+                } catch {
+                    setConnections([]);
+                }
             } catch (err) {
                 setError(err.message || "Failed to load conversations.");
             } finally {
@@ -114,8 +63,10 @@ export default function MessagesPage() {
     }, [token]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-2xl mx-auto py-10 px-4">
+        <PrivateRoute>
+            <Navbar />
+            <div className="min-h-screen bg-gray-50">
+                <div className="max-w-2xl mx-auto py-10 px-4">
 
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Žinutės</h1>
@@ -214,7 +165,8 @@ export default function MessagesPage() {
                         })}
                     </ul>
                 )}
+                </div>
             </div>
-        </div>
+        </PrivateRoute>
     );
 }
