@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useState, use } from "react";
+import { useCallback, useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import PrivateRoute from "../../components/PrivateRouter";
 import Navbar from "../../components/Navbar";
+import ConnectionsPanel from "../../components/ConnectionsPanel";
+import { API_BASE, fetchCurrentUser, loadAcceptedConnections } from "../../lib/connections";
 
 export default function UserProfilePage({ params }) {
     const { userId } = use(params);
@@ -11,18 +13,16 @@ export default function UserProfilePage({ params }) {
     const [profile, setProfile] = useState(null);
     const [academic, setAcademic] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState("NONE");
+    const [connections, setConnections] = useState([]);
+    const [connectionsLoading, setConnectionsLoading] = useState(true);
+    const [connectionsError, setConnectionsError] = useState("");
 
-    useEffect(() => {
-        fetchUserProfile();
-        fetchConnectionStatus();
-        fetchAcademicDashboard();
-    }, [userId]);
-
-    const fetchUserProfile = async () => {
+    const fetchUserProfile = useCallback(async () => {
         try {
             const response = await fetch(
-                `http://localhost:8080/api/users/${Number(cleanUserId)}`,
+                `${API_BASE}/api/users/${Number(cleanUserId)}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -38,12 +38,12 @@ export default function UserProfilePage({ params }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [cleanUserId]);
 
-    const fetchAcademicDashboard = async () => {
+    const fetchAcademicDashboard = useCallback(async () => {
         try {
             const response = await fetch(
-                `http://localhost:8080/api/users/${Number(cleanUserId)}/academic`,
+                `${API_BASE}/api/users/${Number(cleanUserId)}/academic`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -57,45 +57,84 @@ export default function UserProfilePage({ params }) {
         } catch (error) {
             console.error("Failed to fetch academic dashboard:", error);
         }
-    };
+    }, [cleanUserId]);
 
-    const fetchConnectionStatus = async () => {
+    const fetchProfileConnections = useCallback(async () => {
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/connections/status/${Number(cleanUserId)}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
+            setConnectionsLoading(true);
+            setConnectionsError("");
+            const token = localStorage.getItem("token");
+            const acceptedConnections = await loadAcceptedConnections(token, cleanUserId, cleanUserId);
+            setConnections(acceptedConnections);
+        } catch (error) {
+            setConnections([]);
+            setConnectionsError(error.message || "Nepavyko gauti ryšių sąrašo.");
+        } finally {
+            setConnectionsLoading(false);
+        }
+    }, [cleanUserId]);
+
+    const fetchCurrentUserId = useCallback(async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+            const currentUser = await fetchCurrentUser(token);
+            setCurrentUserId(Number(currentUser?.id));
+        } catch (error) {
+            console.error("Failed to fetch current user:", error);
+        }
+    }, []);
+
+    const fetchConnectionStatus = useCallback(async () => {
+        if (currentUserId === null || Number(cleanUserId) === Number(currentUserId)) return;
+
+        try {
+            const response = await fetch(`${API_BASE}/api/connections/status/${Number(cleanUserId)}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+
             if (response.ok) {
                 const data = await response.text();
-                setConnectionStatus(data);
+                setConnectionStatus(data || "NONE");
             }
         } catch (error) {
             console.error("Failed to fetch connection status:", error);
         }
-    };
+    }, [cleanUserId, currentUserId]);
 
     const handleConnect = async () => {
+        if (isOwnProfile) return;
+
         try {
-            await fetch(
-                `http://localhost:8080/api/connections/send/${Number(cleanUserId)}`,
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
+            await fetch(`${API_BASE}/api/connections/send/${Number(cleanUserId)}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
             setConnectionStatus("PENDING");
         } catch (error) {
             console.error("Failed to send connection request:", error);
         }
     };
 
+    useEffect(() => {
+        fetchCurrentUserId();
+        fetchUserProfile();
+        fetchAcademicDashboard();
+        fetchProfileConnections();
+    }, [fetchAcademicDashboard, fetchCurrentUserId, fetchProfileConnections, fetchUserProfile]);
+
+    useEffect(() => {
+        fetchConnectionStatus();
+    }, [fetchConnectionStatus]);
+
+    const isOwnProfile = currentUserId !== null && Number(cleanUserId) === Number(currentUserId);
+
     const getConnectButton = () => {
+        if (isOwnProfile) return null;
         if (connectionStatus === "ACCEPTED") {
             return <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm">Sujungti ✓</span>;
         }
@@ -155,15 +194,17 @@ export default function UserProfilePage({ params }) {
                                 <p className="text-gray-500 text-sm">{profile.university}</p>
                             )}
                         </div>
-                        <div>
-                            {getConnectButton()} {}
-                            <button
-                                onClick={() => router.push(`/messages/${cleanUserId}`)}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 ml-2"
-                            >
-                                Rašyti žinutę
-                            </button>
-                        </div>
+                        {currentUserId !== null && !isOwnProfile && (
+                            <div className="flex items-center gap-2">
+                                {getConnectButton()}
+                                <button
+                                    onClick={() => router.push(`/messages/${cleanUserId}`)}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
+                                >
+                                    Rašyti žinutę
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Bio */}
@@ -202,6 +243,16 @@ export default function UserProfilePage({ params }) {
                             </li>
                         </ul>
                     </div>
+
+                    <ConnectionsPanel
+                        title={`${profile.name || "Vartotojo"} ryšiai`}
+                        connections={connections}
+                        loading={connectionsLoading}
+                        error={connectionsError}
+                        emptyTitle="Šis vartotojas dar neturi ryšių"
+                        emptyDescription="Kai vartotojas priims ryšių užklausas, jos bus rodomos čia."
+                        onOpenProfile={(id) => router.push(`/profile/${id}`)}
+                    />
 
                     {/* Academic Dashboard */}
                     {academic && (

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import MessageBubble from "@/app/components/MessageBubble";
+import PrivateRoute from "../../components/PrivateRouter";
+import Navbar from "../../components/Navbar";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -182,31 +184,34 @@ export default function ConversationPage() {
     const messageMap = Object.fromEntries(messages.map((m) => [m.id, m]));
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50">
-            <header className="flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
-                <button
-                    onClick={() => router.push("/messages")}
-                    className="text-gray-400 hover:text-gray-700 transition-colors text-xl"
-                    aria-label="Back"
-                >
-                    ←
-                </button>
+        <PrivateRoute>
+            <Navbar />
+            <div className="min-h-screen bg-gray-50">
+                <div className="h-[calc(100vh-64px)] flex flex-col">
+                    <header className="flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
+                        <button
+                            onClick={() => router.push("/messages")}
+                            className="text-gray-400 hover:text-gray-700 transition-colors text-xl"
+                            aria-label="Back"
+                        >
+                            ←
+                        </button>
 
-                {otherUser ? (
-                    <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 group">
-                        <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm">
-                            {otherUser.name?.[0]?.toUpperCase() || "?"}
-                        </div>
-                        <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
-                            {otherUser.name}
-                        </span>
-                    </Link>
-                ) : (
-                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-                )}
-            </header>
+                        {otherUser ? (
+                            <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 group">
+                                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm">
+                                    {otherUser.name?.[0]?.toUpperCase() || "?"}
+                                </div>
+                                <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
+                                    {otherUser.name}
+                                </span>
+                            </Link>
+                        ) : (
+                            <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                        )}
+                    </header>
 
-            <main className="flex-1 overflow-y-auto px-4 py-6">
+                    <main className="flex-1 overflow-y-auto px-4 py-6">
                 {loading && (
                     <div className="flex flex-col gap-4">
                         {[...Array(5)].map((_, i) => (
@@ -255,9 +260,9 @@ export default function ConversationPage() {
                         <div ref={bottomRef} />
                     </div>
                 )}
-            </main>
+                    </main>
 
-            <footer className="bg-white border-t border-gray-200 px-4 py-3">
+                    <footer className="bg-white border-t border-gray-200 px-4 py-3">
                 {replyingTo && (
                     <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-2 text-sm">
                         <div className="flex items-center gap-2 min-w-0">
@@ -295,7 +300,9 @@ export default function ConversationPage() {
                         {sending ? "..." : "Send"}
                     </button>
                 </div>
-            </footer>
-        </div>
+                    </footer>
+                </div>
+            </div>
+        </PrivateRoute>
     );
 }

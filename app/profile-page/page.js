@@ -1,12 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import PrivateRoute from "../components/PrivateRouter";
 import ProfileSidebar from "../components/ProfileSidebar";
 import Navbar from "../components/Navbar";
 import DegreeProgress from "../components/DegreeProgress";
 import ScheduleView from "../components/ScheduleView";
+import ConnectionsPanel from "../components/ConnectionsPanel";
+import { API_BASE, loadAcceptedConnections } from "../lib/connections";
 
 export default function Page() {
+    const router = useRouter();
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({
@@ -19,6 +23,9 @@ export default function Page() {
     const [newSkill, setNewSkill] = useState("");
     const [saveStatus, setSaveStatus] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [connections, setConnections] = useState([]);
+    const [connectionsLoading, setConnectionsLoading] = useState(true);
+    const [connectionsError, setConnectionsError] = useState("");
 
     useEffect(() => {
         fetchUserProfile();
@@ -26,9 +33,10 @@ export default function Page() {
 
     const fetchUserProfile = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/user/profile', {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_BASE}/api/user/profile`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${token}`,
                 }
             });
             const data = await response.json();
@@ -42,8 +50,24 @@ export default function Page() {
                 skills: data.skills || [],
                 courses: data.courses || [],
             });
+            fetchProfileConnections(data.id, token);
         } catch (error) {
             console.error('Failed to fetch profile:', error);
+            setConnectionsLoading(false);
+        }
+    };
+
+    const fetchProfileConnections = async (userId, token) => {
+        try {
+            setConnectionsLoading(true);
+            setConnectionsError("");
+            const acceptedConnections = await loadAcceptedConnections(token, userId);
+            setConnections(acceptedConnections);
+        } catch (error) {
+            setConnections([]);
+            setConnectionsError(error.message || "Nepavyko gauti ryšių sąrašo.");
+        } finally {
+            setConnectionsLoading(false);
         }
     };
 
@@ -91,7 +115,7 @@ export default function Page() {
         setSaveStatus(null);
 
         try {
-            const response = await fetch('http://localhost:8080/api/user/profile', {
+            const response = await fetch(`${API_BASE}/api/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -306,6 +330,16 @@ export default function Page() {
                             </div>
                         </div>
                     )}
+
+                    <ConnectionsPanel
+                        title="Mano ryšiai"
+                        connections={connections}
+                        loading={connectionsLoading}
+                        error={connectionsError}
+                        emptyTitle="Dar neturite ryšių"
+                        emptyDescription="Priimti ryšiai čia bus rodomi automatiškai."
+                        onOpenProfile={(id) => router.push(`/profile/${id}`)}
+                    />
 
                     {/* Edit action buttons */}
                     {isEditing && (
