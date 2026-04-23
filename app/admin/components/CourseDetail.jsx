@@ -70,7 +70,7 @@ export default function CourseDetail({ course, onBack }) {
             });
             if (!res.ok) {
                 const msg = await res.text();
-                throw new Error(msg || "Nepavyko užregistruoti studento.");
+                throw new Error(msg || `Nepavyko užregistruoti studento (${res.status}).`);
             }
             setStudentQuery("");
             setStudentResults([]);
@@ -115,8 +115,8 @@ export default function CourseDetail({ course, onBack }) {
                 &larr; Grįžti į kursų sąrašą
             </button>
 
-            <h2 className="text-xl font-bold mb-1 text-gray-800">{course.name}</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <h2 className="text-xl font-bold mb-1 text-gray-900">{course.name}</h2>
+            <p className="text-sm text-gray-600 mb-6">
                 {course.code || "-"} · {course.credits} kreditai · {course.semester || "-"} · {course.lecturer || "-"}
             </p>
 
@@ -129,7 +129,7 @@ export default function CourseDetail({ course, onBack }) {
                         value={studentQuery}
                         onChange={(e) => handleStudentSearch(e.target.value)}
                         placeholder="Ieškoti studento pagal vardą..."
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     {showResults && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-10">
@@ -146,8 +146,8 @@ export default function CourseDetail({ course, onBack }) {
                                         className={`w-full flex items-center justify-between px-4 py-2 text-left border-b border-gray-100 last:border-b-0 ${enrolledIds.has(s.id) ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "hover:bg-gray-50"}`}
                                     >
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-800">{s.name}</p>
-                                            {s.studyProgram && <p className="text-xs text-gray-500">{s.studyProgram}</p>}
+                                            <p className="text-sm font-semibold text-gray-900">{s.name}</p>
+                                            {s.studyProgram && <p className="text-xs text-gray-600">{s.studyProgram}</p>}
                                         </div>
                                         {enrolledIds.has(s.id) ? (
                                             <span className="text-xs">Jau užregistruotas</span>
@@ -164,7 +164,7 @@ export default function CourseDetail({ course, onBack }) {
             </div>
 
             {/* Roster */}
-            <h3 className="font-semibold text-gray-700 mb-3">Studentų sąrašas ({roster.length})</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">Studentų sąrašas ({roster.length})</h3>
             {loading ? (
                 <p className="text-gray-500 text-center">Kraunama...</p>
             ) : roster.length === 0 ? (
@@ -172,7 +172,7 @@ export default function CourseDetail({ course, onBack }) {
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-100 text-gray-700">
+                        <thead className="bg-gray-100 text-gray-800">
                             <tr>
                                 <th className="px-4 py-2">Studentas</th>
                                 <th className="px-4 py-2">El. paštas</th>
@@ -182,9 +182,9 @@ export default function CourseDetail({ course, onBack }) {
                         </thead>
                         <tbody>
                             {roster.map((r) => (
-                                <tr key={r.id} className="border-t border-gray-200">
+                                <tr key={r.id} className="border-t border-gray-200 text-gray-800">
                                     <td className="px-4 py-2 font-medium">{r.studentName}</td>
-                                    <td className="px-4 py-2 text-gray-500">{r.studentEmail}</td>
+                                    <td className="px-4 py-2 text-gray-600">{r.studentEmail}</td>
                                     <td className="px-4 py-2">
                                         <input
                                             type="number"
@@ -198,7 +198,7 @@ export default function CourseDetail({ course, onBack }) {
                                                 }
                                             }}
                                             placeholder="—"
-                                            className="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                            className="w-20 border border-gray-300 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                         />
                                     </td>
                                     <td className="px-4 py-2 text-right">

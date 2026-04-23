@@ -5,11 +5,13 @@ import Navbar from "../components/Navbar";
 import PrivateRoute from "../components/PrivateRouter";
 import CoursesManager from "./components/CoursesManager";
 import CourseDetail from "./components/CourseDetail";
+import StudentsManager from "./components/StudentsManager";
 
 export default function AdminPanel() {
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("courses");
     const [selectedCourse, setSelectedCourse] = useState(null);
 
     useEffect(() => {
@@ -58,24 +60,49 @@ export default function AdminPanel() {
 
     if (!isAdmin) return null;
 
+    const tabs = [
+        { id: "courses", label: "Kursai" },
+        { id: "students", label: "Studentai ir pažymiai" },
+    ];
+
     return (
         <PrivateRoute>
             <Navbar />
             <div className="min-h-screen bg-gray-100 p-8">
                 <div className="max-w-6xl mx-auto">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8">
                         Administratoriaus Panelė
                     </h1>
 
+                    {/* Tabs */}
+                    <div className="flex space-x-4 border-b border-gray-300 mb-6">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => { setActiveTab(tab.id); setSelectedCourse(null); }}
+                                className={`py-2 px-4 font-semibold transition-colors ${
+                                    activeTab === tab.id
+                                        ? "border-b-2 border-blue-600 text-blue-600"
+                                        : "text-gray-600 hover:text-gray-900"
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="bg-white shadow rounded-lg p-6 min-h-[400px]">
-                        {selectedCourse ? (
-                            <CourseDetail
-                                course={selectedCourse}
-                                onBack={() => setSelectedCourse(null)}
-                            />
-                        ) : (
-                            <CoursesManager onSelectCourse={setSelectedCourse} />
+                        {activeTab === "courses" && (
+                            selectedCourse ? (
+                                <CourseDetail
+                                    course={selectedCourse}
+                                    onBack={() => setSelectedCourse(null)}
+                                />
+                            ) : (
+                                <CoursesManager onSelectCourse={setSelectedCourse} />
+                            )
                         )}
+                        {activeTab === "students" && <StudentsManager />}
                     </div>
                 </div>
             </div>
