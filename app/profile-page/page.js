@@ -26,10 +26,29 @@ export default function Page() {
     const [connections, setConnections] = useState([]);
     const [connectionsLoading, setConnectionsLoading] = useState(true);
     const [connectionsError, setConnectionsError] = useState("");
+    const [enrollments, setEnrollments] = useState([]);
+    const [enrollmentsLoading, setEnrollmentsLoading] = useState(true);
 
     useEffect(() => {
         fetchUserProfile();
+        fetchEnrollments();
     }, []);
+
+    const fetchEnrollments = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/user/grades`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) setEnrollments(await res.json());
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setEnrollmentsLoading(false);
+        }
+    };
+
+    const finalOf = (e) => e.grade ?? e.suggestedGrade;
 
     const fetchUserProfile = async () => {
         try {
@@ -362,14 +381,92 @@ export default function Page() {
 
                     {/* Academic Record Section */}
                     <div id="academic-record" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Akademiniai rezultatai</h2>
-                        <p className="text-black">Akademinių rezultatų informacija...</p>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg text-black font-semibold">Akademiniai rezultatai</h2>
+                            <button
+                                onClick={() => router.push("/grades")}
+                                className="text-sm text-blue-500 hover:text-blue-700"
+                            >
+                                Žiūrėti visus pažymius →
+                            </button>
+                        </div>
+                        {enrollmentsLoading ? (
+                            <p className="text-sm text-gray-500">Kraunama...</p>
+                        ) : enrollments.length === 0 ? (
+                            <p className="text-sm text-gray-500 italic">
+                                Dar nesate užregistruotas į jokius kursus.
+                            </p>
+                        ) : (
+                            (() => {
+                                const graded = enrollments.filter((e) => finalOf(e) != null);
+                                const average = graded.length > 0
+                                    ? graded.reduce((acc, e) => acc + finalOf(e), 0) / graded.length
+                                    : 0;
+                                const passedCount = enrollments.filter((e) => (finalOf(e) ?? 0) >= 5).length;
+                                return (
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="bg-blue-50 rounded-lg p-4">
+                                            <p className="text-xs text-gray-600 uppercase">Vidurkis</p>
+                                            <p className="text-2xl font-bold text-blue-600">
+                                                {graded.length > 0 ? average.toFixed(2) : "—"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-4">
+                                            <p className="text-xs text-gray-600 uppercase">Išlaikyta</p>
+                                            <p className="text-2xl font-bold text-green-600">
+                                                {passedCount} / {enrollments.length}
+                                            </p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <p className="text-xs text-gray-600 uppercase">Iš viso kursų</p>
+                                            <p className="text-2xl font-bold text-gray-800">
+                                                {enrollments.length}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })()
+                        )}
                     </div>
 
                     {/* Current Courses Section */}
                     <div id="current-courses" className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg text-black font-semibold mb-2">Dabartiniai kursai</h2>
-                        <p className="text-black">Dabartinių kursų informacija...</p>
+                        <h2 className="text-lg text-black font-semibold mb-4">Dabartiniai kursai</h2>
+                        {enrollmentsLoading ? (
+                            <p className="text-sm text-gray-500">Kraunama...</p>
+                        ) : enrollments.length === 0 ? (
+                            <p className="text-sm text-gray-500 italic">
+                                Administratorius jūsų dar nepriregistravo į kursus.
+                            </p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {enrollments.map((e) => {
+                                    const fg = finalOf(e);
+                                    return (
+                                        <div key={e.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                                            <div className="flex items-start justify-between mb-1">
+                                                <p className="font-mono text-xs text-gray-500">{e.courseCode || ""}</p>
+                                                {fg != null && (
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                                        e.grade != null ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
+                                                    }`}>
+                                                        {e.grade != null ? fg.toFixed(1) : `~${fg.toFixed(1)}`}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h3 className="font-semibold text-gray-900">{e.courseName}</h3>
+                                            {e.assignmentScores && e.assignmentScores.length > 0 && (
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {e.assignmentScores.filter((a) => a.score != null).length}
+                                                    {" / "}
+                                                    {e.assignmentScores.length} užduočių atlikta
+                                                </p>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     {/* Schedule Section */}

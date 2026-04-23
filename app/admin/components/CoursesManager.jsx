@@ -160,29 +160,31 @@ export default function CoursesManager({ onSelectCourse }) {
             ) : courses.length === 0 ? (
                 <p className="text-gray-400 text-center">Kursų nėra.</p>
             ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-100 text-gray-800">
+                        <thead className="bg-gray-100 text-gray-900">
                             <tr>
-                                <th className="px-4 py-2">Kodas</th>
-                                <th className="px-4 py-2">Pavadinimas</th>
-                                <th className="px-4 py-2">Kreditai</th>
-                                <th className="px-4 py-2">Semestras</th>
-                                <th className="px-4 py-2">Dėstytojas</th>
-                                <th className="px-4 py-2">Statusas</th>
-                                <th className="px-4 py-2 text-right">Veiksmai</th>
+                                <th className="px-4 py-3 font-semibold">Kodas</th>
+                                <th className="px-4 py-3 font-semibold">Pavadinimas</th>
+                                <th className="px-4 py-3 font-semibold text-center">Kreditai</th>
+                                <th className="px-4 py-3 font-semibold">Semestras</th>
+                                <th className="px-4 py-3 font-semibold">Dėstytojas</th>
+                                <th className="px-4 py-3 font-semibold text-center">Statusas</th>
+                                <th className="px-4 py-3 font-semibold text-right">Veiksmai</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {courses.map((c) => (
-                                <tr key={c.id} className={`border-t border-gray-200 ${c.active ? "text-gray-800" : "bg-gray-50 text-gray-400"}`}>
-                                    <td className="px-4 py-2 font-mono">{c.code || "-"}</td>
-                                    <td className="px-4 py-2 font-medium">{c.name}</td>
-                                    <td className="px-4 py-2">{c.credits}</td>
-                                    <td className="px-4 py-2">{c.semester || "-"}</td>
-                                    <td className="px-4 py-2">{c.lecturer || "-"}</td>
-                                    <td className="px-4 py-2">
-                                        <span className={`text-xs px-2 py-1 rounded-full ${c.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                            {courses.map((c, idx) => (
+                                <tr key={c.id} className={`border-t border-gray-200 ${
+                                    c.active ? "text-gray-900" : "text-gray-400"
+                                } ${idx % 2 === 1 ? "bg-gray-50" : "bg-white"}`}>
+                                    <td className="px-4 py-3 font-mono font-semibold">{c.code || "-"}</td>
+                                    <td className="px-4 py-3 font-medium">{c.name}</td>
+                                    <td className="px-4 py-3 text-center">{c.credits}</td>
+                                    <td className="px-4 py-3">{c.semester || "-"}</td>
+                                    <td className="px-4 py-3">{c.lecturer || "-"}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${c.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
                                             {c.active ? "Aktyvus" : "Neaktyvus"}
                                         </span>
                                     </td>
