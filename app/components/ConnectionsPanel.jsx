@@ -40,20 +40,26 @@ export default function ConnectionsPanel({
                     {connections.map((connection) => (
                         <div
                             key={connection.id}
-                            className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex items-center justify-between gap-3"
+                            className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-4 hover:border-blue-300 hover:shadow-md transition"
                         >
                             <button
                                 onClick={() => onOpenProfile?.(connection.id)}
-                                className="flex items-center gap-3 min-w-0 text-left"
+                                className="flex items-center gap-4 min-w-0 text-left flex-1"
                                 type="button"
                             >
-                                <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0">
+                                <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 text-xl font-bold flex items-center justify-center shrink-0">
                                     {connection.name?.charAt(0)?.toUpperCase() || "?"}
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="font-semibold text-gray-900 truncate">{connection.name}</p>
-                                    {connection.studyProgram && (
-                                        <p className="text-sm text-gray-500 truncate">{connection.studyProgram}</p>
+                                    <p className="text-base font-semibold text-gray-900 truncate">
+                                        {connection.name}
+                                    </p>
+                                    {connection.studyProgram ? (
+                                        <p className="text-sm text-gray-600 truncate">{connection.studyProgram}</p>
+                                    ) : connection.university ? (
+                                        <p className="text-sm text-gray-600 truncate">{connection.university}</p>
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">Studentas</p>
                                     )}
                                 </div>
                             </button>
@@ -61,7 +67,7 @@ export default function ConnectionsPanel({
                             {onSendMessage && (
                                 <button
                                     onClick={() => onSendMessage(connection.id)}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition shrink-0"
                                     type="button"
                                 >
                                     Siųsti žinutę
