@@ -46,7 +46,10 @@ export default function CoursesManager({ onSelectCourse }) {
                 },
                 body: JSON.stringify({ ...form, credits: Number(form.credits) }),
             });
-            if (!res.ok) throw new Error("Nepavyko išsaugoti kurso.");
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt || `Nepavyko išsaugoti kurso (${res.status}).`);
+            }
             resetForm();
             fetchCourses();
         } catch (err) {
@@ -106,14 +109,14 @@ export default function CoursesManager({ onSelectCourse }) {
                         placeholder="Pavadinimas"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <input
                         type="text"
                         placeholder="Kodas (pvz. P170B115)"
                         value={form.code}
                         onChange={(e) => setForm({ ...form, code: e.target.value })}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <input
                         type="number"
@@ -121,24 +124,24 @@ export default function CoursesManager({ onSelectCourse }) {
                         placeholder="Kreditai"
                         value={form.credits}
                         onChange={(e) => setForm({ ...form, credits: e.target.value })}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <input
                         type="text"
                         placeholder="Semestras (pvz. 2025 Ruduo)"
                         value={form.semester}
                         onChange={(e) => setForm({ ...form, semester: e.target.value })}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <input
                         type="text"
                         placeholder="Dėstytojas"
                         value={form.lecturer}
                         onChange={(e) => setForm({ ...form, lecturer: e.target.value })}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                 </div>
-                {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+                {error && <p className="text-sm text-red-600 mt-2 whitespace-pre-wrap">{error}</p>}
                 <div className="flex gap-2 mt-3">
                     <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
                         {editingId ? "Atnaujinti" : "Sukurti"}
@@ -159,7 +162,7 @@ export default function CoursesManager({ onSelectCourse }) {
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-100 text-gray-700">
+                        <thead className="bg-gray-100 text-gray-800">
                             <tr>
                                 <th className="px-4 py-2">Kodas</th>
                                 <th className="px-4 py-2">Pavadinimas</th>
@@ -172,7 +175,7 @@ export default function CoursesManager({ onSelectCourse }) {
                         </thead>
                         <tbody>
                             {courses.map((c) => (
-                                <tr key={c.id} className={`border-t border-gray-200 ${c.active ? "" : "bg-gray-50 text-gray-400"}`}>
+                                <tr key={c.id} className={`border-t border-gray-200 ${c.active ? "text-gray-800" : "bg-gray-50 text-gray-400"}`}>
                                     <td className="px-4 py-2 font-mono">{c.code || "-"}</td>
                                     <td className="px-4 py-2 font-medium">{c.name}</td>
                                     <td className="px-4 py-2">{c.credits}</td>
