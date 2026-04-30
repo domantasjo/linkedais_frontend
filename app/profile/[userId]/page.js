@@ -187,6 +187,9 @@ export default function UserProfilePage({ params }) {
                             <h1 className="text-2xl text-black font-semibold">
                                 {profile.name}
                             </h1>
+                            {profile.headline && (
+                                <p className="text-gray-600 text-md mt-1">{profile.headline}</p>
+                            )}
                             {profile.studyProgram && (
                                 <p className="text-gray-600">{profile.studyProgram}</p>
                             )}
