@@ -6,6 +6,7 @@ export default function PostCard({ post, onDelete, onLike, onBookmark, currentUs
     const [liked, setLiked] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
     const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
+    const [isImageOpen, setIsImageOpen] = useState(false);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -38,50 +39,83 @@ export default function PostCard({ post, onDelete, onLike, onBookmark, currentUs
     const isAuthor = currentUserId === post.authorId;
 
     return (
-        <div className="bg-white shadow rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold text-gray-900 text-lg hover:text-gray-500">
-                    {post.authorName}
-                </h2>
-                <span className="text-sm text-gray-500">
-                    {formatDate(post.createdAt)}
-                </span>
-            </div>
-            <p className="text-gray-700 mb-4">{post.content}</p>
-            <div className="flex items-center justify-between text-gray-500 border-t pt-3">
-                <button
-                    onClick={handleLike}
-                    className={`flex items-center gap-2 hover:text-blue-500 ${liked ? "text-blue-500" : ""}`}
-                >
-                    <span>Patinka ({post.likeCount})</span>
-                </button>
+        <>
+            <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="font-semibold text-gray-900 text-lg hover:text-gray-500">
+                        {post.authorName}
+                    </h2>
+                    <span className="text-sm text-gray-500">
+                        {formatDate(post.createdAt)}
+                    </span>
+                </div>
+                <p className="text-gray-700 mb-4">{post.content}</p>
 
-                <button
-                    onClick={handleBookmark}
-                    disabled={isBookmarkLoading}
-                    className={`flex items-center gap-2 transition-colors ${
-                        isBookmarked
-                            ? 'text-yellow-500 hover:text-yellow-600'
-                            : 'text-gray-500 hover:text-yellow-500'
-                    } ${isBookmarkLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                    <span>{isBookmarked ? 'Išsaugota' : 'Išsaugoti'}</span>
-                </button>
-
-                {isAuthor && (
-                    <button
-                        onClick={() => onDelete(post.id)}
-                        className="text-red-500 hover:text-red-700 text-sm transition-colors"
-                    >
-                        Ištrinti
-                    </button>
+                {post.imageBase64 && (
+                    <div className="mb-4">
+                        <img
+                            src={post.imageBase64}
+                            alt="Post image"
+                            className="rounded-lg w-full max-h-96 object-contain cursor-pointer hover:opacity-90 transition"
+                            onClick={() => setIsImageOpen(true)}
+                        />
+                    </div>
                 )}
+
+                <div className="flex items-center justify-between text-gray-500 border-t pt-3">
+                    <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-2 hover:text-blue-500 ${liked ? "text-blue-500" : ""}`}
+                    >
+                        <span>Patinka ({post.likeCount})</span>
+                    </button>
+
+                    <button
+                        onClick={handleBookmark}
+                        disabled={isBookmarkLoading}
+                        className={`flex items-center gap-2 transition-colors ${
+                            isBookmarked
+                                ? 'text-yellow-500 hover:text-yellow-600'
+                                : 'text-gray-500 hover:text-yellow-500'
+                        } ${isBookmarkLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <span>{isBookmarked ? 'Išsaugota' : 'Išsaugoti'}</span>
+                    </button>
+
+                    {isAuthor && (
+                        <button
+                            onClick={() => onDelete(post.id)}
+                            className="text-red-500 hover:text-red-700 text-sm transition-colors"
+                        >
+                            Ištrinti
+                        </button>
+                    )}
+                </div>
+                <CommentSection
+                    postId={post.id}
+                    currentUserId={currentUserId}
+                    commentCount={post.commentCount || 0}
+                />
             </div>
-            <CommentSection
-                postId={post.id}
-                currentUserId={currentUserId}
-                commentCount={post.commentCount || 0}
-            />
-        </div>
+
+            {isImageOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 cursor-pointer"
+                    onClick={() => setIsImageOpen(false)}
+                >
+                    <img
+                        src={post.imageBase64}
+                        alt="Full size"
+                        className="max-w-full max-h-full object-contain"
+                    />
+                    <button
+                        className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"
+                        onClick={() => setIsImageOpen(false)}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+        </>
     );
 }
