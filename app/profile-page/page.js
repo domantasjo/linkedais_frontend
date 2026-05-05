@@ -45,6 +45,7 @@ export default function Page() {
                 name: data.name || "",
                 email: data.email || "",
                 bio: data.bio || "",
+                headline: data.headline || "",
                 university: data.university || "",
                 studyProgram: data.studyProgram || "",
                 skills: data.skills || [],
@@ -75,6 +76,7 @@ export default function Page() {
         setEditForm({
             name: profile.name,
             bio: profile.bio,
+            headline: profile.headline,
             university: profile.university,
             studyProgram: profile.studyProgram,
             skills: [...profile.skills],
@@ -124,6 +126,7 @@ export default function Page() {
                 body: JSON.stringify({
                     name: editForm.name,
                     bio: editForm.bio,
+                    headline: editForm.headline,
                     university: editForm.university,
                     studyProgram: editForm.studyProgram,
                     skills: editForm.skills,
@@ -191,16 +194,31 @@ export default function Page() {
 
                         <div className="flex-1">
                             {isEditing ? (
-                                <input
-                                    type="text"
-                                    value={editForm.name}
-                                    onChange={(e) => handleFormChange("name", e.target.value)}
-                                    className="border border-gray-300 rounded-md px-3 py-2 text-black text-xl font-semibold w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                    placeholder="Vardas"
-                                    autoFocus
-                                />
+                                <>
+                                    <input
+                                        type="text"
+                                        value={editForm.name}
+                                        onChange={(e) => handleFormChange("name", e.target.value)}
+                                        className="border border-gray-300 rounded-md px-3 py-2 text-black text-xl font-semibold w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        placeholder="Vardas"
+                                        autoFocus
+                                    />
+                                    <input
+                                        type="text"
+                                        value={editForm.headline}
+                                        onChange={(e) => handleFormChange("headline", e.target.value)}
+                                        className="border border-gray-300 rounded-md px-3 py-1 text-black text-sm w-full mt-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        placeholder="Antraštė (pvz., AI Safety Researcher, Student)"
+                                        maxLength={120}
+                                    />
+                                </>
                             ) : (
-                                <h1 className="text-2xl text-black font-semibold">{profile.name}</h1>
+                                <>
+                                    <h1 className="text-2xl text-black font-semibold">{profile.name}</h1>
+                                    <p className="text-gray-600 text-md mt-1">
+                                        {profile.headline || "Be antraštės"}
+                                    </p>
+                                </>
                             )}
                             <p className="text-gray-600 mt-1">{profile.studyProgram || "Studijų programa nenurodyta"}</p>
                         </div>
