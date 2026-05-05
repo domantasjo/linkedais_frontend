@@ -7,6 +7,10 @@ import Navbar from "../components/Navbar";
 export default function FeedPage(){
     const [posts, setPosts] = useState([]);
     const [newContent, setNewContent] = useState("");
+    const [image, setImage] = useState(null);
+    const [imageBase64, setImageBase64] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [uploading, setUploading] = useState(false);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(true);
@@ -72,8 +76,53 @@ export default function FeedPage(){
         init();
     }, []);
 
+    const handleImageSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Paveikslėlis per didelis. Maksimalus dydis: 5MB");
+                return;
+            }
+            if (!file.type.startsWith("image/")) {
+                alert("Galima įkelti tik paveikslėlių failus");
+                return;
+            }
+            setImage(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const removeImage = () => {
+        setImage(null);
+        setImagePreview(null);
+    };
+
     const handleCreatePost = async () => {
-        if (!newContent.trim()) return;
+        if (!newContent.trim() && !image) return;
+
+        setUploading(true);
+        let imageBase64 = null;
+
+        if (image) {
+            const formData = new FormData();
+            formData.append("image", image);
+
+            const uploadRes = await fetch("http://localhost:8080/api/images/upload", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: formData
+            });
+
+            if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                imageBase64 = uploadData.imageBase64;
+            } else {
+                const errorData = await uploadRes.json();
+                throw new Error(errorData.error || "Nepavyko įkelti paveikslėlio");
+            }
+        }
 
         const token = localStorage.getItem("token");
         const response = await fetch("http://localhost:8080/api/posts", {
@@ -82,12 +131,15 @@ export default function FeedPage(){
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ content: newContent })
+            body: JSON.stringify({ content: newContent, imageBase64: imageBase64 })
         });
 
         const newPost = await response.json();
         setPosts([{ ...newPost, isBookmarked: false }, ...posts]);
         setNewContent("");
+        setImageBase64(null);
+        setImagePreview(null);
+        setUploading(false);
     };
 
     const handleDelete = async (postId) => {
@@ -177,12 +229,41 @@ export default function FeedPage(){
                         value={newContent}
                         onChange={(e) => setNewContent(e.target.value)}
                     />
-                        <div className="flex justify-end mt-3">
+                        {/* Image Preview */}
+                        {imagePreview && (
+                            <div className="relative mt-3 inline-block">
+                                <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="max-h-48 rounded-lg border"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={removeImage}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex justify-between items-center mt-3">
+                            <label className="cursor-pointer bg-gray-200 text-black px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition">
+                                Pridėti paveikslėlį
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageSelect}
+                                    className="hidden"
+                                />
+                            </label>
+
                             <button
                                 onClick={handleCreatePost}
-                                className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600"
+                                disabled={uploading}
+                                className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
                             >
-                                Skelbti
+                                {uploading ? "Skelbiama..." : "Skelbti"}
                             </button>
                         </div>
                     </div>
