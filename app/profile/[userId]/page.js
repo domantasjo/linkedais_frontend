@@ -18,6 +18,7 @@ export default function UserProfilePage({ params }) {
     const [connections, setConnections] = useState([]);
     const [connectionsLoading, setConnectionsLoading] = useState(true);
     const [connectionsError, setConnectionsError] = useState("");
+    const [connectionId, setConnectionId] = useState(null);
 
     const fetchUserProfile = useCallback(async () => {
         try {
@@ -85,24 +86,25 @@ export default function UserProfilePage({ params }) {
         }
     }, []);
 
-    const fetchConnectionStatus = useCallback(async () => {
-        if (currentUserId === null || Number(cleanUserId) === Number(currentUserId)) return;
-
+    const fetchConnectionStatus = async () => {
         try {
-            const response = await fetch(`${API_BASE}/api/connections/status/${Number(cleanUserId)}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-            });
-
+            const response = await fetch(
+                `http://localhost:8080/api/connections/status/${Number(cleanUserId)}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
             if (response.ok) {
-                const data = await response.text();
-                setConnectionStatus(data || "NONE");
+                const data = await response.json();
+                setConnectionStatus(data.status);
+                setConnectionId(data.connectionId);
             }
         } catch (error) {
             console.error("Failed to fetch connection status:", error);
         }
-    }, [cleanUserId, currentUserId]);
+    };
 
     const handleConnect = async () => {
         if (isOwnProfile) return;
@@ -120,6 +122,18 @@ export default function UserProfilePage({ params }) {
         }
     };
 
+    const handleRemoveConnection = async () => {
+        if (!window.confirm("Ar tikrai norite pašalinti šį kontaktą?")) return;
+        await fetch(`http://localhost:8080/api/connections/${connectionId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        });
+        setConnectionStatus("NONE");
+        setConnectionId(null);
+    };
+
     useEffect(() => {
         fetchCurrentUserId();
         fetchUserProfile();
@@ -134,9 +148,15 @@ export default function UserProfilePage({ params }) {
     const isOwnProfile = currentUserId !== null && Number(cleanUserId) === Number(currentUserId);
 
     const getConnectButton = () => {
-        if (isOwnProfile) return null;
         if (connectionStatus === "ACCEPTED") {
-            return <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm">Sujungti ✓</span>;
+            return (
+                <button
+                    onClick={handleRemoveConnection}
+                    className="px-4 py-2 bg-red-100 text-red-500 rounded-lg text-sm hover:bg-red-200"
+                >
+                    Pašalinti iš kontaktų
+                </button>
+            );
         }
         if (connectionStatus === "PENDING") {
             return <span className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm">Laukiama...</span>;

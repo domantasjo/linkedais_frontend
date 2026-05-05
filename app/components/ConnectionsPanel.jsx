@@ -9,6 +9,7 @@ export default function ConnectionsPanel({
     emptyDescription = "Priimti ryšiai čia bus rodomi automatiškai.",
     onOpenProfile,
     onSendMessage,
+    onRemoveConnection,
 }) {
     return (
         <div className="bg-white shadow rounded-lg p-6">
@@ -58,15 +59,27 @@ export default function ConnectionsPanel({
                                 </div>
                             </button>
 
-                            {onSendMessage && (
-                                <button
-                                    onClick={() => onSendMessage(connection.id)}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
-                                    type="button"
-                                >
-                                    Siųsti žinutę
-                                </button>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {onSendMessage && (
+                                    <button
+                                        onClick={() => onSendMessage(connection.id)}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
+                                        type="button"
+                                    >
+                                        Siųsti žinutę
+                                    </button>
+                                )}
+
+                                {onRemoveConnection && (
+                                    <button
+                                        onClick={() => onRemoveConnection(connection.id)}
+                                        className="px-4 py-2 bg-red-100 text-red-500 rounded-lg text-sm hover:bg-red-200 transition"
+                                        type="button"
+                                    >
+                                        Pašalinti iš kontaktų
+                                    </button>
+                                )}
+                            </div>
 
                         </div>
                     ))}
