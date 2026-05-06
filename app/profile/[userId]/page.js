@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import PrivateRoute from "../../components/PrivateRouter";
 import Navbar from "../../components/Navbar";
 import ConnectionsPanel from "../../components/ConnectionsPanel";
+import WorkExperience from "../../components/WorkExperience";
 import { API_BASE, fetchCurrentUser, loadAcceptedConnections } from "../../lib/connections";
 
 export default function UserProfilePage({ params }) {
@@ -251,6 +252,13 @@ export default function UserProfilePage({ params }) {
                             <p className="text-gray-400 text-sm">Įgūdžių nenurodyta.</p>
                         )}
                     </div>
+
+                    {/* Work Experience */}
+                    <WorkExperience
+                        experiences={profile.workExperiences}
+                        isOwnProfile={isOwnProfile}
+                        onUpdate={fetchUserProfile}
+                    />
 
                     {/* Basic Info */}
                     <div className="bg-white shadow rounded-lg p-6">

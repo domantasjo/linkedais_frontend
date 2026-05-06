@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar";
 import DegreeProgress from "../components/DegreeProgress";
 import ScheduleView from "../components/ScheduleView";
 import ConnectionsPanel from "../components/ConnectionsPanel";
+import WorkExperience from "../components/WorkExperience";
 import { API_BASE, loadAcceptedConnections } from "../lib/connections";
 
 export default function Page() {
@@ -50,6 +51,7 @@ export default function Page() {
                 studyProgram: data.studyProgram || "",
                 skills: data.skills || [],
                 courses: data.courses || [],
+                workExperiences: data.workExperiences || [],
             });
             fetchProfileConnections(data.id, token);
         } catch (error) {
@@ -333,6 +335,15 @@ export default function Page() {
                             </div>
                         )}
                     </div>
+
+                    {/* Work Experience Section */}
+                    {!isEditing && (
+                        <WorkExperience
+                            experiences={profile.workExperiences}
+                            isOwnProfile={true}
+                            onUpdate={fetchUserProfile}
+                        />
+                    )}
 
                     {/* Courses Section */}
                     {(!isEditing && profile.courses && profile.courses.length > 0) && (
