@@ -42,9 +42,17 @@ export default function PostCard({ post, onDelete, onLike, onBookmark, currentUs
         <>
             <div className="bg-white shadow rounded-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-semibold text-gray-900 text-lg hover:text-gray-500">
-                        {post.authorName}
-                    </h2>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                            {post.authorAvatar
+                                ? <img src={post.authorAvatar} alt={post.authorName} className="w-full h-full object-cover" />
+                                : <span>{post.authorName?.charAt(0)?.toUpperCase() || "?"}</span>
+                            }
+                        </div>
+                        <h2 className="font-semibold text-gray-900 text-lg hover:text-gray-500">
+                            {post.authorName}
+                        </h2>
+                    </div>
                     <span className="text-sm text-gray-500">
                         {formatDate(post.createdAt)}
                     </span>

@@ -48,8 +48,11 @@ export default function ConnectionsPanel({
                                 className="flex items-center gap-3 min-w-0 text-left"
                                 type="button"
                             >
-                                <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0">
-                                    {connection.name?.charAt(0)?.toUpperCase() || "?"}
+                                <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                                    {connection.avatar
+                                        ? <img src={connection.avatar} alt={connection.name} className="w-full h-full object-cover" />
+                                        : <span>{connection.name?.charAt(0)?.toUpperCase() || "?"}</span>
+                                    }
                                 </div>
                                 <div className="min-w-0">
                                     <p className="font-semibold text-gray-900 truncate">{connection.name}</p>

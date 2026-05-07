@@ -22,16 +22,19 @@ export function normalizeConnections(payload, currentUserId) {
         } else if (item?.id && item?.name && !item?.requesterId && !item?.receiverId) {
             user = item;
         } else if (item?.requesterId && item?.receiverId) {
-            user = Number(item.requesterId) === Number(currentUserId)
+            const isRequester = Number(item.requesterId) === Number(currentUserId);
+            user = isRequester
                 ? {
                     id: item.receiverId,
                     name: item.receiverName,
                     studyProgram: item.receiverStudyProgram,
+                    avatar: item.receiverAvatar || null,
                 }
                 : {
                     id: item.requesterId,
                     name: item.requesterName,
                     studyProgram: item.requesterStudyProgram,
+                    avatar: item.requesterAvatar || null,
                 };
         }
 
@@ -44,6 +47,7 @@ export function normalizeConnections(payload, currentUserId) {
             id: normalizedUserId,
             name: user?.name || "Nežinomas vartotojas",
             studyProgram: user?.studyProgram || "",
+            avatar: user?.avatar || null,
         });
     });
 
