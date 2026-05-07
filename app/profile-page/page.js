@@ -24,6 +24,7 @@ export default function Page() {
     const [newSkill, setNewSkill] = useState("");
     const [saveStatus, setSaveStatus] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [avatarUploading, setAvatarUploading] = useState(false);
     const [connections, setConnections] = useState([]);
     const [connectionsLoading, setConnectionsLoading] = useState(true);
     const [connectionsError, setConnectionsError] = useState("");
@@ -52,6 +53,7 @@ export default function Page() {
                 skills: data.skills || [],
                 courses: data.courses || [],
                 workExperiences: data.workExperiences || [],
+                profilePictureBase64: data.profilePictureBase64 || null,
             });
             fetchProfileConnections(data.id, token);
         } catch (error) {
@@ -85,6 +87,46 @@ export default function Page() {
         });
         setIsEditing(true);
         setSaveStatus(null);
+    };
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Nuotrauka per didelė. Maksimalus dydis: 5MB");
+            return;
+        }
+        if (!file.type.startsWith("image/")) {
+            alert("Galima įkelti tik paveikslėlius");
+            return;
+        }
+        setAvatarUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/user/profile-picture`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setProfile(prev => ({ ...prev, profilePictureBase64: updated.profilePictureBase64 }));
+            } else {
+                let message = `Nepavyko įkelti nuotraukos (HTTP ${res.status}).`;
+                try {
+                    const body = await res.json();
+                    if (body?.error) message = body.error;
+                } catch { /* response wasn't JSON, keep generic message */ }
+                alert(message);
+            }
+        } catch (err) {
+            console.error("Avatar upload failed", err);
+            alert(`Nepavyko įkelti nuotraukos: ${err?.message || "tinklo klaida"}`);
+        } finally {
+            setAvatarUploading(false);
+        }
     };
 
     const cancelEditing = () => {
@@ -190,9 +232,21 @@ export default function Page() {
 
                     {/* Profile Header */}
                     <div id="dashboard" className="bg-white shadow rounded-lg p-6 flex items-center gap-6">
-                        <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600">
-                            {(isEditing ? editForm.name : profile.name)?.charAt(0)}
-                        </div>
+                        <label className="relative cursor-pointer group shrink-0" title="Keisti profilio nuotrauką">
+                            <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600 overflow-hidden">
+                                {profile.profilePictureBase64
+                                    ? <img src={profile.profilePictureBase64} alt="Profilio nuotrauka" className="w-full h-full object-cover" />
+                                    : <span>{(isEditing ? editForm.name : profile.name)?.charAt(0)}</span>
+                                }
+                            </div>
+                            <div className="absolute inset-0 rounded-full bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                {avatarUploading
+                                    ? <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    : <span className="text-white text-xs font-medium text-center leading-tight px-1">Keisti</span>
+                                }
+                            </div>
+                            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={avatarUploading} />
+                        </label>
 
                         <div className="flex-1">
                             {isEditing ? (
