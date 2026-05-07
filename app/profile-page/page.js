@@ -114,11 +114,16 @@ export default function Page() {
                 const updated = await res.json();
                 setProfile(prev => ({ ...prev, profilePictureBase64: updated.profilePictureBase64 }));
             } else {
-                alert("Nepavyko įkelti nuotraukos. Bandykite dar kartą.");
+                let message = `Nepavyko įkelti nuotraukos (HTTP ${res.status}).`;
+                try {
+                    const body = await res.json();
+                    if (body?.error) message = body.error;
+                } catch { /* response wasn't JSON, keep generic message */ }
+                alert(message);
             }
         } catch (err) {
             console.error("Avatar upload failed", err);
-            alert("Nepavyko įkelti nuotraukos.");
+            alert(`Nepavyko įkelti nuotraukos: ${err?.message || "tinklo klaida"}`);
         } finally {
             setAvatarUploading(false);
         }
