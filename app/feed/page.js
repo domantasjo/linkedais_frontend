@@ -1,5 +1,5 @@
 "use client";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import PrivateRoute from "../components/PrivateRouter";
 import PostCard from "../components/PostCard";
 import Navbar from "../components/Navbar";
@@ -11,9 +11,16 @@ export default function FeedPage(){
     const [imageBase64, setImageBase64] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    // Refs used inside the IntersectionObserver closure — always current without re-creating the observer
+    const hasMoreRef = useRef(true);
+    const pageRef = useRef(0);
+    const bookmarkedIdsRef = useRef(new Set());
+    const isFetchingRef = useRef(false);
+    const observerRef = useRef(null);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
 
@@ -52,20 +59,32 @@ export default function FeedPage(){
 
     const fetchPosts = async (pageNum = 0, bookmarkedSetParam) => {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:8080/api/posts?page=${pageNum}&size=5`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
+        const response = await fetch(`http://localhost:8080/api/posts?page=${pageNum}&size=10`, {
+            headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await response.json();
-        if (data.length < 5) setHasMore(false);
-
-        const postsWithBookmarkStatus = data.map(post => ({...post, isBookmarked: bookmarkedSetParam.has(post.id)}));
-
-        if (pageNum === 0) setPosts(postsWithBookmarkStatus);
-        else setPosts(prev => [...prev, ...postsWithBookmarkStatus]);
-        setLoading(false);
+        const reachedEnd = data.length < 10;
+        if (reachedEnd) {
+            setHasMore(false);
+            hasMoreRef.current = false;
+        }
+        const postsWithBookmarkStatus = data.map(post => ({
+            ...post,
+            isBookmarked: bookmarkedSetParam.has(post.id)
+        }));
+        if (pageNum === 0) {
+            setPosts(postsWithBookmarkStatus);
+            setLoading(false);
+        } else {
+            setPosts(prev => [...prev, ...postsWithBookmarkStatus]);
+            setLoadingMore(false);
+            isFetchingRef.current = false;
+        }
     };
+
+    // Keep refs in sync with state so the observer always reads the latest values
+    useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
+    useEffect(() => { bookmarkedIdsRef.current = bookmarkedIds; }, [bookmarkedIds]);
 
     useEffect(() => {
         const init = async () => {
@@ -75,6 +94,27 @@ export default function FeedPage(){
         };
         init();
     }, []);
+
+    // Callback ref: observer wires up the moment the sentinel element mounts
+    const sentinelRef = useCallback((node) => {
+        if (observerRef.current) {
+            observerRef.current.disconnect();
+            observerRef.current = null;
+        }
+        if (!node) return;
+        observerRef.current = new IntersectionObserver(
+            async ([entry]) => {
+                if (!entry.isIntersecting || !hasMoreRef.current || isFetchingRef.current) return;
+                isFetchingRef.current = true;
+                setLoadingMore(true);
+                const nextPage = pageRef.current + 1;
+                pageRef.current = nextPage;
+                await fetchPosts(nextPage, bookmarkedIdsRef.current);
+            },
+            { rootMargin: "200px" }
+        );
+        observerRef.current.observe(node);
+    }, []); // stable — all mutable values accessed via refs
 
     const handleImageSelect = (e) => {
         const file = e.target.files[0];
@@ -155,11 +195,6 @@ export default function FeedPage(){
         setPosts(posts.filter(post => post.id !== postId));
     };
 
-    const handleLoadMore = () => {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchPosts(nextPage, bookmarkedIds);
-    };
 
     const handleLike = async (postId, isLiked) => {
         const token = localStorage.getItem("token");
@@ -285,14 +320,18 @@ export default function FeedPage(){
                                 />
                             ))}
 
-                            {/* Load more button */}
-                            {hasMore && (
-                                <button
-                                    onClick={handleLoadMore}
-                                    className="w-full bg-white shadow rounded-lg p-4 text-blue-500 hover:text-blue-600"
-                                >
-                                    Rodyti daugiau
-                                </button>
+                            {/* Infinite scroll sentinel */}
+                            <div ref={sentinelRef} className="h-4" />
+
+                            {/* Spinner shown while fetching next page */}
+                            {loadingMore && (
+                                <div className="flex justify-center py-6">
+                                    <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            )}
+
+                            {!hasMore && posts.length > 0 && (
+                                <p className="text-center text-sm text-gray-400 py-4">Visi įrašai parodyti</p>
                             )}
                         </>
                     )}
